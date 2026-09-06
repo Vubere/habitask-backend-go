@@ -1,6 +1,6 @@
 package models
 
-import "habitask-backend-go/lib/constants"
+import "habitask-backend-go/pkg/lib/constants"
 
 type HabitAction struct {
 	BaseModel
@@ -13,4 +13,20 @@ type HabitAction struct {
 	IsPositive   *bool              `gorm:"default:true"`
 	UserID       string             `gorm:"index"`
 	User         *User              `gorm:"foreignKey:UserID"`
+}
+
+type HabitActionSummary struct {
+	Label        string  `json:"label"`
+	Count        int     `json:"count"`
+	CostIncurred float64 `json:"cost_incurred"`
+}
+
+type HabitActionQuery struct {
+	HabitAction
+	Search  string  `json:"search"`
+	DateLte *string `json:"date_lte"`
+	DateGte *string `json:"date_gte"`
+	//SummaryQuerys
+	GroupBy   string `json:"group_by"`
+	DateGroup string `json:"date_group"` //day, week, month, year, week_day, month_name
 }

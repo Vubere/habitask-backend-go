@@ -30,7 +30,6 @@ func ParseTaskStep(taskStep *models.TaskSteps) *TaskStepDTO {
 		TimeDue:       taskStep.TimeDue,
 		EstimatedTime: taskStep.EstimatedDuration,
 		ActualTime:    taskStep.ActualDuration,
-		TimeUnit:      taskStep.DurationUnit,
 		Priority:      taskStep.Priority,
 		User:          ParseUser(taskStep.User),
 		Task:          ParseTask(taskStep.Task),
@@ -50,7 +49,6 @@ func (t *TaskStepCreateDTO) ToTaskStep(ctx *gin.Context) *models.TaskSteps {
 	taskStep := &models.TaskSteps{
 		Description:       t.Description,
 		EstimatedDuration: t.EstimatedDuration,
-		DurationUnit:      t.DurationUnit,
 		Priority:          t.Priority,
 		TaskID:            t.TaskID,
 	}
@@ -62,9 +60,7 @@ func (t *TaskStepCreateDTO) ToTaskStep(ctx *gin.Context) *models.TaskSteps {
 		}
 		taskStep.TimeDue = &td
 	}
-	if t.DurationUnit != "" {
-		taskStep.DurationUnit = t.DurationUnit
-	}
+
 	return taskStep
 }
 
@@ -95,9 +91,7 @@ func (t *TaskStepUpdateDTO) ToTaskStep(ctx *gin.Context) *models.TaskSteps {
 		}
 		taskStep.TimeDue = &timeDue
 	}
-	if t.DurationUnit != nil {
-		taskStep.DurationUnit = *t.DurationUnit
-	}
+
 	if t.Priority != nil {
 		taskStep.Priority = *t.Priority
 	}

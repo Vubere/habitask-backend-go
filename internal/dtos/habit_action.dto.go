@@ -2,7 +2,7 @@ package dtos
 
 import (
 	"habitask-backend-go/internal/models"
-	"habitask-backend-go/lib/constants"
+	"habitask-backend-go/pkg/lib/constants"
 
 	"github.com/gin-gonic/gin"
 )

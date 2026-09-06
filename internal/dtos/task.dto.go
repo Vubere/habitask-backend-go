@@ -2,7 +2,7 @@ package dtos
 
 import (
 	"habitask-backend-go/internal/models"
-	"habitask-backend-go/lib/constants"
+	"habitask-backend-go/pkg/lib/constants"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -32,7 +32,6 @@ func ParseTask(task *models.Task) *TaskDTO {
 		DueAt:             task.DueAt.Format("2006-01-02 15:04:05"),
 		EstimatedDuration: task.EstimatedDuration,
 		ActualDuration:    task.ActualDuration,
-		DurationUnit:      task.DurationUnit,
 	}
 }
 
@@ -50,7 +49,6 @@ func (t *TaskCreateDTO) ToTask() *models.Task {
 		Category:          t.Category,
 		Description:       t.Description,
 		EstimatedDuration: t.EstimatedDuration,
-		DurationUnit:      t.DurationUnit,
 	}
 	return task
 }

@@ -1,7 +1,7 @@
 package models
 
 import (
-	"habitask-backend-go/lib/constants"
+	"habitask-backend-go/pkg/lib/constants"
 	"time"
 )
 
@@ -16,4 +16,22 @@ type Habit struct {
 	Cons        string             `gorm:"text"`
 	IsPositive  *bool              `gorm:"default:true"`
 	LastDone    *time.Time         `gorm:"datetime"`
+}
+
+type HabbitSummary struct {
+	Label          string  `json:"label"`
+	Count          int     `json:"count"`
+	PositiveCount  int     `json:"positive_count"`
+	NegativeCount  int     `json:"negative_count"`
+	LastHabbitDate *string `json:"last_done"`
+}
+
+type HabitQuery struct {
+	Habit
+	Search      string     `json:"search"`
+	LastDoneLte *time.Time `json:"last_done_lte"`
+	LastDoneGte *time.Time `json:"last_done_gte"`
+	//SummaryFiltes
+	GroupBy   string `json:"group_by"`
+	DateGroup string `json:"date_group"` //DAY, WEEK, MONTH, YEAR
 }

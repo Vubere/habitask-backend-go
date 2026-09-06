@@ -14,3 +14,20 @@ type Notification struct {
 	UserID      string    `gorm:"index"`
 	User        *User     `gorm:"foreignKey:UserID"`
 }
+
+type NotificationSummary struct {
+	Label                string  `json:"label"`
+	Count                int     `json:"count"`
+	LastNotificationDate *string `json:"last_notification_date"`
+	UnreadCount          int     `json:"unread_count"`
+}
+
+type NotificationQuery struct {
+	Notification
+	Search  string  `json:"search"`
+	DateLte *string `json:"date_lte"`
+	DateGte *string `json:"date_gte"`
+	//SummaryQuerys
+	GroupBy   string `json:"group_by"`
+	DateGroup string `json:"date_group"` //day, week, month, year, week_day, month_name
+}
