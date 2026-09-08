@@ -8,7 +8,7 @@ type UserDTO struct {
 	LastName   string `json:"last_name"`
 	Email      string `json:"email"`
 	Profession string `json:"profession"`
-	UserName   string `json:"user_name"`
+	Username   string `json:"user_name"`
 	Bio        string `json:"bio"`
 }
 
@@ -20,7 +20,7 @@ func ParseUser(user *models.User) *UserDTO {
 		Email:      user.Email,
 		Profession: user.Profession,
 		Bio:        user.Bio,
-		UserName:   user.UserName,
+		Username:   user.Username,
 	}
 }
 
@@ -29,7 +29,7 @@ type UserCreateDTO struct {
 	LastName   string `json:"last_name" binding:"required"`
 	Email      string `json:"email" binding:"required"`
 	Password   string `json:"password" binding:"required"`
-	UserName   string `json:"user_name" binding:"required"`
+	Username   string `json:"user_name" binding:"required"`
 	Profession string `json:"profession"`
 	Bio        string `json:"bio"`
 }
@@ -40,7 +40,7 @@ func (u *UserCreateDTO) ToUser() *models.User {
 		LastName:   u.LastName,
 		Email:      u.Email,
 		Password:   u.Password,
-		UserName:   u.UserName,
+		Username:   u.Username,
 		Profession: u.Profession,
 		Bio:        u.Bio,
 		IsAdmin:    false,
@@ -56,7 +56,7 @@ type UserUpdateDTO struct {
 	Password   *string `json:"password"`
 	Profession *string `json:"profession"`
 	Bio        *string `json:"bio"`
-	UserName   *string `json:"user_name"`
+	Username   *string `json:"user_name"`
 }
 
 func (u *UserUpdateDTO) ToUser() *models.User {
@@ -79,8 +79,8 @@ func (u *UserUpdateDTO) ToUser() *models.User {
 	if u.Bio != nil {
 		user.Bio = *u.Bio
 	}
-	if u.UserName != nil {
-		user.UserName = *u.UserName
+	if u.Username != nil {
+		user.Username = *u.Username
 	}
 	return user
 }

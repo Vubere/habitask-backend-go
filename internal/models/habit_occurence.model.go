@@ -25,5 +25,7 @@ type HabitOccurenceSummary struct {
 	Label         string  `json:"label"`
 	Count         int     `json:"count"`
 	LastHabitDate *string `json:"last_habit_date"`
+	PositiveCount int     `json:"positive_count"`
+	NegativeCount int     `json:"negative_count"`
 	UserID        string  `json:"user_id"`
 }

@@ -6,7 +6,7 @@ type User struct {
 	BaseModel
 	FirstName   string     `gorm:"Varchar(50)"`
 	LastName    string     `gorm:"Varchar(50)"`
-	UserName    string     `gorm:"unique;Varchar(100);unique_index:idx_user_name"`
+	Username    string     `gorm:"unique;Varchar(100);"`
 	Email       string     `gorm:"unique;Varchar(100)"`
 	Password    string     `gorm:"Varchar(100)" json:"-"`
 	Token       string     `gorm:"unique;Varchar(100)"`

@@ -14,7 +14,7 @@ type TaskSteps struct {
 	TimeDue           *time.Time `gorm:"datetime"`
 	EstimatedDuration int        `gorm:"default:0"` //seconds
 	ActualDuration    int        `gorm:"default:0"` //seconds
-	Priority          string     `gorm:"enum('low', 'medium', 'high');Varchar(50)"`
+	Order             *int       `gorm:"default:0"`
 }
 
 type TaskStepsQuery struct {

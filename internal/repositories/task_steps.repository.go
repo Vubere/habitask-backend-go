@@ -151,7 +151,7 @@ var taskStepSummaryGroups = map[string]string{
 	"description":   "task_steps.description",
 	"is_done":       "task_steps.is_done",
 	"user_id":       "task_steps.user_id",
-	"user_name":     "users.user_name",
+	"username":      "users.username",
 	"task_id":       "task_steps.task_id",
 	"task_name":     "tasks.name",
 	"task_category": "tasks.category",

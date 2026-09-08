@@ -6,6 +6,7 @@ import (
 	"habitask-backend-go/pkg/helpers"
 	"habitask-backend-go/pkg/lib/database/scopes"
 	"habitask-backend-go/pkg/lib/structs"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -67,8 +68,11 @@ func (r *habitActionRepository) GetHabitActionSummary(filter *models.HabitAction
 		SUM(habit_actions.cost_incurred) as cost_incurred
 		`, groupExpr),
 	)
-	if groupExpr == "habits.habit_name" {
+	if strings.HasPrefix(groupExpr, "habits.") {
 		query = query.Joins("JOIN habits ON habit_actions.habit_id = habits.id")
+	}
+	if strings.HasPrefix(groupExpr, "users.") {
+		query = query.Joins("JOIN users ON habit_actions.user_id = users.id")
 	}
 	if filter.Search != "" {
 		query = query.Where("title LIKE ? OR description LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
@@ -110,6 +114,7 @@ var habitActionSummaryGroups = map[string]string{
 	"cost_incurred": "habit_actions.cost_incurred",
 	"is_positive":   "habit_actions.is_positive",
 	"user_id":       "habit_actions.user_id",
+	"username":      "users.username",
 	"habit_id":      "habit_actions.habit_id",
 	"habit_name":    "habits.habit_name",
 }

@@ -17,6 +17,7 @@ type Task struct {
 	DueAt             *time.Time         `gorm:"datetime"`
 	EstimatedDuration int                `gorm:"default:0"` //seconds
 	ActualDuration    int                `gorm:"default:0"` //seconds
+	Priority          string             `gorm:"enum('low', 'medium', 'high');Varchar(50)"`
 }
 
 type TaskSummary struct {

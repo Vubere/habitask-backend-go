@@ -19,11 +19,11 @@ type Habit struct {
 }
 
 type HabbitSummary struct {
-	Label          string  `json:"label"`
-	Count          int     `json:"count"`
-	PositiveCount  int     `json:"positive_count"`
-	NegativeCount  int     `json:"negative_count"`
-	LastHabbitDate *string `json:"last_done"`
+	Label         string  `json:"label"`
+	Count         int     `json:"count"`
+	PositiveCount int     `json:"positive_count"`
+	NegativeCount int     `json:"negative_count"`
+	LastHabitDate *string `json:"last_done"`
 }
 
 type HabitQuery struct {

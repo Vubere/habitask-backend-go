@@ -112,5 +112,5 @@ var habitSummaryGroups = map[string]string{
 	"category":   "habits.category",
 	"positive":   "habits.is_positive",
 	"user_id":    "habits.user_id",
-	"user_name":  "users.user_name",
+	"username":   "users.username",
 }

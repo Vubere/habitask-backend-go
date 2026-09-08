@@ -11,9 +11,11 @@ type HabitActionDTO struct {
 	ID           string             `json:"id"`
 	Title        string             `json:"title"`
 	Description  string             `json:"description"`
+	HabitID      string             `json:"habit_id"`
 	Category     constants.Category `json:"category"`
 	CostIncurred float64            `json:"cost_incurred"`
 	IsPositive   *bool              `json:"is_positive"`
+	UserID       string             `json:"user_id"`
 	User         *UserDTO           `json:"user"`
 }
 
@@ -21,10 +23,12 @@ func ParseHabitAction(habitAction *models.HabitAction) *HabitActionDTO {
 	return &HabitActionDTO{
 		ID:           habitAction.ID,
 		Title:        habitAction.Title,
+		HabitID:      habitAction.HabitID,
 		Description:  habitAction.Description,
 		Category:     habitAction.Category,
 		CostIncurred: habitAction.CostIncurred,
 		IsPositive:   habitAction.IsPositive,
+		UserID:       habitAction.UserID,
 		User:         ParseUser(habitAction.User),
 	}
 }
@@ -32,6 +36,7 @@ func ParseHabitAction(habitAction *models.HabitAction) *HabitActionDTO {
 type HabitActionCreateDTO struct {
 	Title        string             `json:"title" binding:"required"`
 	Description  string             `json:"description" binding:"required"`
+	HabitID      string             `json:"habit_id" binding:"required"`
 	Category     constants.Category `json:"category" binding:"required"`
 	CostIncurred float64            `json:"cost_incurred" binding:"required"`
 	IsPositive   *bool              `json:"is_positive"`
@@ -41,6 +46,7 @@ func (h *HabitActionCreateDTO) ToHabitAction(ctx *gin.Context) *models.HabitActi
 	habitAction := &models.HabitAction{
 		Title:        h.Title,
 		Description:  h.Description,
+		HabitID:      h.HabitID,
 		Category:     h.Category,
 		CostIncurred: h.CostIncurred,
 		IsPositive:   h.IsPositive,

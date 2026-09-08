@@ -13,6 +13,7 @@ type UserRepository interface {
 	GetUser(id string) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	GetUserByToken(token string) (*models.User, error)
+	GetUserByUsername(username string) (*models.User, error)
 	CreateUser(user *models.User) error
 	UpdateUser(user *models.User) error
 	DeleteUser(id string) error
@@ -57,6 +58,12 @@ func (r *userRepository) GetUserByEmail(email string) (*models.User, error) {
 func (r *userRepository) GetUserByToken(token string) (*models.User, error) {
 	user := &models.User{}
 	err := r.db.Where("token = ?", token).First(user).Error
+	return user, err
+}
+
+func (r *userRepository) GetUserByUsername(username string) (*models.User, error) {
+	user := &models.User{}
+	err := r.db.Where("username = ?", username).First(user).Error
 	return user, err
 }
 

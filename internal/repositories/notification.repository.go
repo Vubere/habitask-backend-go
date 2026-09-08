@@ -105,14 +105,13 @@ func (r *notificationRepository) DeleteNotification(id string) error {
 }
 
 var notificationSummaryGroups = map[string]string{
-	"created_at":  "notifications.created_at",
-	"date":        "notifications.date",
-	"title":       "notifications.title",
-	"category":    "notifications.category",
-	"is_read":     "notifications.is_read",
-	"user_id":     "notifications.user_id",
-	"user_name":   "users.user_name",
-	"source":      "notifications.source",
-	"source_id":   "notifications.source_id",
-	"source_name": "users.user_name",
+	"created_at": "notifications.created_at",
+	"date":       "notifications.date",
+	"title":      "notifications.title",
+	"category":   "notifications.category",
+	"is_read":    "notifications.is_read",
+	"user_id":    "notifications.user_id",
+	"username":   "users.username",
+	"source":     "notifications.source",
+	"source_id":  "notifications.source_id",
 }

@@ -19,6 +19,9 @@ type TaskDTO struct {
 	EstimatedDuration int                `json:"estimated_duration"`
 	ActualDuration    int                `json:"actual_duration"`
 	DurationUnit      string             `json:"duration_unit"`
+	Priority          string             `json:"priority"`
+	UserID            string             `json:"user_id"`
+	User              *UserDTO           `json:"user"`
 }
 
 func ParseTask(task *models.Task) *TaskDTO {
@@ -32,6 +35,7 @@ func ParseTask(task *models.Task) *TaskDTO {
 		DueAt:             task.DueAt.Format("2006-01-02 15:04:05"),
 		EstimatedDuration: task.EstimatedDuration,
 		ActualDuration:    task.ActualDuration,
+		Priority:          task.Priority,
 	}
 }
 
@@ -41,6 +45,7 @@ type TaskCreateDTO struct {
 	Description       string             `json:"description" binding:"required"`
 	EstimatedDuration int                `json:"estimated_duration"`
 	DurationUnit      string             `json:"duration_unit"`
+	Priority          string             `json:"priority"`
 }
 
 func (t *TaskCreateDTO) ToTask() *models.Task {
@@ -49,6 +54,7 @@ func (t *TaskCreateDTO) ToTask() *models.Task {
 		Category:          t.Category,
 		Description:       t.Description,
 		EstimatedDuration: t.EstimatedDuration,
+		Priority:          t.Priority,
 	}
 	return task
 }
@@ -58,8 +64,8 @@ type TaskUpdateDTO struct {
 	Category          *constants.Category `json:"category"`
 	Description       *string             `json:"description"`
 	EstimatedDuration *int                `json:"estimated_duration"`
-	DurationUnit      *string             `json:"duration_unit"`
 	ActualDuration    *int                `json:"actual_duration"`
+	Priority          *string             `json:"priority"`
 }
 
 func (t *TaskUpdateDTO) ToTask() *models.Task {
@@ -72,6 +78,12 @@ func (t *TaskUpdateDTO) ToTask() *models.Task {
 	}
 	if t.Description != nil {
 		task.Description = *t.Description
+	}
+	if t.Priority != nil {
+		task.Priority = *t.Priority
+	}
+	if t.EstimatedDuration != nil {
+		task.EstimatedDuration = *t.EstimatedDuration
 	}
 	return task
 }

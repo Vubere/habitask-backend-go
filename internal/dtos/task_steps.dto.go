@@ -14,6 +14,7 @@ type TaskStepDTO struct {
 	DoneAt        *time.Time `json:"done_at"`
 	TimeDue       *time.Time `json:"time_due"`
 	EstimatedTime int        `json:"estimated_time"`
+	Order         *int       `json:"order"`
 	ActualTime    int        `json:"actual_time"`
 	TimeUnit      string     `json:"time_unit"`
 	Priority      string     `json:"priority"`
@@ -26,11 +27,11 @@ func ParseTaskStep(taskStep *models.TaskSteps) *TaskStepDTO {
 		ID:            taskStep.ID,
 		Description:   taskStep.Description,
 		IsDone:        taskStep.IsDone,
+		Order:         taskStep.Order,
 		DoneAt:        taskStep.DoneAt,
 		TimeDue:       taskStep.TimeDue,
 		EstimatedTime: taskStep.EstimatedDuration,
 		ActualTime:    taskStep.ActualDuration,
-		Priority:      taskStep.Priority,
 		User:          ParseUser(taskStep.User),
 		Task:          ParseTask(taskStep.Task),
 	}
@@ -41,16 +42,15 @@ type TaskStepCreateDTO struct {
 	Description       string `json:"description" binding:"required"`
 	EstimatedDuration int    `json:"estimated_time" binding:"required"`
 	TimeDue           string `json:"time_due"`
-	DurationUnit      string `json:"time_unit"`
-	Priority          string `json:"priority"`
+	Order             *int   `json:"order"`
 }
 
 func (t *TaskStepCreateDTO) ToTaskStep(ctx *gin.Context) *models.TaskSteps {
 	taskStep := &models.TaskSteps{
 		Description:       t.Description,
 		EstimatedDuration: t.EstimatedDuration,
-		Priority:          t.Priority,
 		TaskID:            t.TaskID,
+		Order:             t.Order,
 	}
 	if t.TimeDue != "" {
 		td, err := time.Parse("2006-01-02 15:04:05", t.TimeDue)
@@ -67,9 +67,9 @@ func (t *TaskStepCreateDTO) ToTaskStep(ctx *gin.Context) *models.TaskSteps {
 type TaskStepUpdateDTO struct {
 	Description       *string `json:"description"`
 	EstimatedDuration *int    `json:"estimated_duration"`
+	Order             *int    `json:"order"`
 	TimeDue           *string `json:"time_due"`
 	DurationUnit      *string `json:"time_unit"`
-	Priority          *string `json:"priority"`
 	ActualDuration    *int    `json:"actual_duration"`
 }
 
@@ -91,10 +91,10 @@ func (t *TaskStepUpdateDTO) ToTaskStep(ctx *gin.Context) *models.TaskSteps {
 		}
 		taskStep.TimeDue = &timeDue
 	}
-
-	if t.Priority != nil {
-		taskStep.Priority = *t.Priority
+	if t.Order != nil {
+		taskStep.Order = t.Order
 	}
+
 	return taskStep
 }
 

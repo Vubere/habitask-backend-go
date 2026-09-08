@@ -4,7 +4,7 @@ type Reminder struct {
 	BaseModel
 	Title               string  `gorm:"unique;varchar(100)"`
 	Description         string  `gorm:"varchar(500)"`
-	Purpose             string  `gorm:"varchar(500)"`
+	Purpose             string  `gorm:"varchar(255)"`
 	Category            string  `gorm:"enum('alarm', 'reminder');Varchar(50)"`
 	Trigger             string  `gorm:"enum('datetime', 'time', 'interval','source');Varchar(50)"`
 	TriggerValue        string  `gorm:"varchar(50)"`

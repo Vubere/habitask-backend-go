@@ -66,6 +66,8 @@ func (r *habitOccurenceRepository) GetHabitOccurenceSummary(filter *models.Habit
 		%s as label,
 		COUNT(habit_occurences.id) as count,
 		MAX(habit_occurences.date) as last_habit_date,
+		Count(habits.is_positive) as positive_count,
+		Count(habits.is_positive = 0) as negative_count,
 		habit_occurences.user_id
 		`, groupExpr),
 	)

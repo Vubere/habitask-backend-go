@@ -58,6 +58,7 @@ func (r *taskRepository) GetTasks(filter *models.TaskQuery, pagination *structs.
 	if filter.ActualDurationGte != nil {
 		query = query.Where("actual_duration >= ?", *filter.ActualDurationGte)
 	}
+
 	err := query.Scopes(scopes.ApplyPaginationAndSort(pagination)).Find(&tasks).Error
 	return tasks, err
 }
@@ -147,8 +148,9 @@ var taskSummaryGroups = map[string]string{
 	"due_at":       "tasks.due_at",
 	"name":         "tasks.name",
 	"category":     "tasks.category",
+	"priority":     "tasks.priority",
 	"is_completed": "tasks.is_completed",
 	"completed_at": "tasks.completed_at",
 	"user_id":      "tasks.user_id",
-	"user_name":    "users.user_name",
+	"username":     "users.username",
 }
