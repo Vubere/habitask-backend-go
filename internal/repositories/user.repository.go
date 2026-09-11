@@ -9,11 +9,12 @@ import (
 )
 
 type UserRepository interface {
-	GetUsers(filter *models.UserQuery, pagination *structs.PaginationAndSort) ([]*models.User, error)
+	GetUsers(filter *models.UserQuery, pagination *structs.PaginationAndSort) ([]models.User, error)
 	GetUser(id string) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	GetUserByToken(token string) (*models.User, error)
 	GetUserByUsername(username string) (*models.User, error)
+	GetByUsernameOrEmail(usernameOrEmail string) (*models.User, error)
 	CreateUser(user *models.User) error
 	UpdateUser(user *models.User) error
 	DeleteUser(id string) error
@@ -27,8 +28,8 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
 }
 
-func (r *userRepository) GetUsers(filter *models.UserQuery, pagination *structs.PaginationAndSort) ([]*models.User, error) {
-	users := []*models.User{}
+func (r *userRepository) GetUsers(filter *models.UserQuery, pagination *structs.PaginationAndSort) ([]models.User, error) {
+	users := []models.User{}
 	query := r.db.Model(&models.User{}).Where(filter.User)
 	if filter.Search != "" {
 		query = query.Where("first_name LIKE ? OR last_name LIKE ? OR email LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%", "%"+filter.Search+"%")
@@ -64,6 +65,12 @@ func (r *userRepository) GetUserByToken(token string) (*models.User, error) {
 func (r *userRepository) GetUserByUsername(username string) (*models.User, error) {
 	user := &models.User{}
 	err := r.db.Where("username = ?", username).First(user).Error
+	return user, err
+}
+
+func (r *userRepository) GetByUsernameOrEmail(usernameOrEmail string) (*models.User, error) {
+	user := &models.User{}
+	err := r.db.Where("username = ? OR email = ?", usernameOrEmail, usernameOrEmail).First(user).Error
 	return user, err
 }
 
