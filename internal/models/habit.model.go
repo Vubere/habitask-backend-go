@@ -9,7 +9,7 @@ type Habit struct {
 	BaseModel
 	Name        string             `gorm:"unique;varchar(100)"`
 	Description string             `gorm:"varchar(500)"`
-	UserID      string             `gorm:"index"`
+	UserID      string             `gorm:"index;varchar(36)"`
 	User        *User              `gorm:"foreignKey:UserID"`
 	Category    constants.Category `gorm:"varchar(255)"`
 	Pros        string             `gorm:"text"`

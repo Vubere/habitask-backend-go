@@ -2,13 +2,12 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"habitask-backend-go/internal/models"
 	"habitask-backend-go/internal/repositories"
 	"habitask-backend-go/pkg/appbcrypt"
 	"habitask-backend-go/pkg/appjwt"
 	"habitask-backend-go/pkg/lib/structs"
-
-	"gorm.io/gorm"
 )
 
 type UserService interface {
@@ -30,40 +29,48 @@ func NewUserService(userRepository repositories.UserRepository) UserService {
 
 func (s *userService) SignUp(user *models.User) error {
 	rec, err := s.userRepository.GetUserByEmail(user.Email)
+	fmt.Println("email")
 	if err != nil {
-		if err.Error() != gorm.ErrRecordNotFound.Error() {
+		if err.Error() != "record not found" {
 			return err
 		}
+		err = nil
 	}
-	if rec.ID != "" {
+	fmt.Println("email passed")
+	if rec != nil && rec.ID != "" {
 		return errors.New("email already exists")
 	}
 	rec, err = s.userRepository.GetUserByUsername(user.Username)
+	fmt.Println("id")
 	if err != nil {
-		if err.Error() != gorm.ErrRecordNotFound.Error() {
+		if err.Error() != "record not found" {
 			return err
 		}
+		err = nil
 	}
-	if rec != nil {
+	if rec != nil && rec.ID != "" {
 		return errors.New("username already exists")
 	}
+	fmt.Println("username")
 	user.Password, err = appbcrypt.HashPassword(user.Password)
 	if err != nil {
 		return err
 	}
+	fmt.Println("username passed")
 	return s.userRepository.CreateUser(user)
 }
 
 func (s *userService) Login(usernameOrEmail string, password string) (string, *models.User, error) {
 	user, err := s.userRepository.GetByUsernameOrEmail(usernameOrEmail)
+
 	if err != nil {
-		if err.Error() != gorm.ErrRecordNotFound.Error() {
+		if err.Error() == "record not found" {
 			return "", nil, errors.New("invalid username or password")
 		}
 		return "", nil, err
 	}
-	if appbcrypt.VerifyPassword(password, user.Password) {
-		return "", nil, errors.New("invalid username or password")
+	if !appbcrypt.VerifyPassword(password, user.Password) {
+		return "", nil, errors.New("invalid username or password f")
 	}
 	token, err := appjwt.CreateToken(appjwt.JwtUserInfo{
 		UserID:   user.ID,

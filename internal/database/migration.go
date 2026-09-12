@@ -22,4 +22,5 @@ func Migrate(db *gorm.DB) {
 		fmt.Println("DB Migration failed: ", err)
 		panic(err)
 	}
+	fmt.Println("DB Migration successful!")
 }

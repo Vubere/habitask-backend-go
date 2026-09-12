@@ -13,7 +13,7 @@ type Reminder struct {
 	SourceID            *string `gorm:"index"`
 	SourceField         *string `gorm:"varchar(50)"`
 	SourceFieldType     *string `gorm:"enum('string', 'number', 'date', 'time');Varchar(50)" json:"-"`
-	UserID              string  `gorm:"index"`
+	UserID              string  `gorm:"index;type:varchar(36)"`
 	User                *User   `gorm:"foreignKey:UserID"`
 	IsRead              *bool   `gorm:"default:false"`
 }

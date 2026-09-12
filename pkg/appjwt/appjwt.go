@@ -23,6 +23,8 @@ func CreateToken(user JwtUserInfo) (string, error) {
 		"username": user.Username,
 		"email":    user.Email,
 		"exp":      time.Now().Add(time.Hour * 24 * 7).Unix(),
+		"iat":      time.Now().Unix(),
+		"issuer":   "habitask",
 	})
 	tokenString, err := token.SignedString(secretKey)
 	if err != nil {
@@ -49,7 +51,7 @@ func VerifyToken(tokenString string) (JwtUserInfo, error) {
 		UserID:   claims["user_id"].(string),
 		Username: claims["username"].(string),
 		Email:    claims["email"].(string),
-		Exp:      claims["exp"].(int64),
+		Exp:      claims["expiresIn"].(int64),
 	}
 	return userInfo, nil
 }

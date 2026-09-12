@@ -5,13 +5,13 @@ import "habitask-backend-go/pkg/lib/constants"
 type HabitAction struct {
 	BaseModel
 	Title        string             `gorm:"unique;varchar(100)"`
-	Description  string             `gorm:"Varchar(500)"`
-	HabitID      string             `gorm:"index"`
+	Description  string             `gorm:"varchar(500)"`
+	HabitID      string             `gorm:"index;varchar(36)"`
 	Habit        *Habit             `gorm:"foreignKey:HabitID"`
 	CostIncurred float64            `gorm:"default:0"`
 	Category     constants.Category `gorm:"varchar(255)"`
 	IsPositive   *bool              `gorm:"default:true"`
-	UserID       string             `gorm:"index"`
+	UserID       string             `gorm:"index;type:varchar(36)"`
 	User         *User              `gorm:"foreignKey:UserID"`
 }
 

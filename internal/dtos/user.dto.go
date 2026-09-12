@@ -8,7 +8,7 @@ type UserDTO struct {
 	LastName   string `json:"last_name"`
 	Email      string `json:"email"`
 	Profession string `json:"profession"`
-	Username   string `json:"user_name"`
+	Username   string `json:"username"`
 	Bio        string `json:"bio"`
 }
 
@@ -29,7 +29,7 @@ type UserCreateDTO struct {
 	LastName   string `json:"last_name" binding:"required"`
 	Email      string `json:"email" binding:"required"`
 	Password   string `json:"password" binding:"required"`
-	Username   string `json:"user_name" binding:"required"`
+	Username   string `json:"username" binding:"required"`
 	Profession string `json:"profession"`
 	Bio        string `json:"bio"`
 }
@@ -56,7 +56,7 @@ type UserUpdateDTO struct {
 	Password   *string `json:"password"`
 	Profession *string `json:"profession"`
 	Bio        *string `json:"bio"`
-	Username   *string `json:"user_name"`
+	Username   *string `json:"username"`
 }
 
 func (u *UserUpdateDTO) ToUser() *models.User {
@@ -82,5 +82,17 @@ func (u *UserUpdateDTO) ToUser() *models.User {
 	if u.Username != nil {
 		user.Username = *u.Username
 	}
+	return user
+}
+
+type UserLoginDTO struct {
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+func (u *UserLoginDTO) ToUser() *models.User {
+	user := &models.User{}
+	user.Email = u.Email
+	user.Password = u.Password
 	return user
 }

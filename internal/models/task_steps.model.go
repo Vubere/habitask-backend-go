@@ -4,10 +4,10 @@ import "time"
 
 type TaskSteps struct {
 	BaseModel
-	TaskID            string     `gorm:"index"`
+	TaskID            string     `gorm:"index;varchar(36)"`
 	Task              *Task      `gorm:"foreignKey:TaskID"`
 	User              *User      `gorm:"foreignKey:UserID"`
-	UserID            string     `gorm:"index"`
+	UserID            string     `gorm:"index;type:varchar(36)"`
 	Description       string     `gorm:"Varchar(500)"`
 	IsDone            *bool      `gorm:"default:false"`
 	DoneAt            *time.Time `gorm:"datetime"`

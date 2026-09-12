@@ -43,7 +43,7 @@ func (c *userController) SignUp(ctx *gin.Context) {
 }
 
 func (c *userController) Login(ctx *gin.Context) {
-	var userInput dtos.UserCreateDTO
+	var userInput dtos.UserLoginDTO
 	if err := ctx.ShouldBindJSON(&userInput); err != nil {
 		ctx.JSON(400, gin.H{"error": err.Error()})
 		return

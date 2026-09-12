@@ -9,7 +9,7 @@ type Task struct {
 	BaseModel
 	Name              string             `gorm:"unique;varchar(100)"`
 	Description       string             `gorm:"Varchar(500)"`
-	UserID            uint               `gorm:"index"`
+	UserID            string             `gorm:"index;type:varchar(36)"`
 	User              *User              `gorm:"foreignKey:UserID"`
 	Category          constants.Category `gorm:"varchar(50)"`
 	IsCompleted       *bool              `gorm:"default:false"`

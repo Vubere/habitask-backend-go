@@ -6,7 +6,7 @@ type HabitOccurence struct {
 	BaseModel
 	HabitID string    `gorm:"index"`
 	Habit   *Habit    `gorm:"foreignKey:HabitID"`
-	UserID  string    `gorm:"index"`
+	UserID  string    `gorm:"index;varchar(36)"`
 	User    *User     `gorm:"foreignKey:UserID"`
 	Date    time.Time `gorm:"datetime"`
 }

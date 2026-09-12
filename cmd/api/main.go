@@ -1,16 +1,25 @@
 package main
 
 import (
+	"fmt"
 	"habitask-backend-go/internal/controllers"
 	"habitask-backend-go/internal/database"
 	"habitask-backend-go/internal/middleware"
 	"habitask-backend-go/internal/repositories"
 	"habitask-backend-go/internal/services"
+	"log"
+	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	db := database.Connect()
 	database.Migrate(db)
 
@@ -25,27 +34,47 @@ func main() {
 
 	// Routes
 	router := gin.Default()
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
+	router.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusNotFound, gin.H{
+			"success": false,
+			"code":    404,
+			"message": "The requested resource was not found",
+		})
+	})
+
 	v1 := router.Group("/api/v1")
 
 	// - Public
 	// - - User
-	v1.Group("/users")
+	public := v1.Group("")
+	private := v1.Group("")
+
+	public.Group("")
 	{
-		v1.POST("/signup", userController.SignUp)
-		v1.POST("/login", userController.Login)
+		v1.POST("/users/signup", userController.SignUp)
+		v1.POST("/users/login", userController.Login)
 	}
 
 	// - Private
-	v1.Use(middleware.AuthenticationMiddleware())
+	private.Use(middleware.AuthenticationMiddleware())
 	{
 		// - Users
-		v1.Group("/users")
-		{
-			v1.GET("/me", userController.Me)
-			v1.GET("/:id", userController.GetUserById)
-			v1.GET("", userController.GetUsers)
-			v1.PUT("/:id", userController.UpdateUser)
-			v1.DELETE("/:id", userController.DeleteUser)
-		}
+		v1.GET("/users/me", userController.Me)
+		v1.GET("/users/:id", userController.GetUserById)
+		v1.GET("/users", userController.GetUsers)
+		v1.PUT("/users/:id", userController.UpdateUser)
+		v1.DELETE("/users/:id", userController.DeleteUser)
+	}
+	// not found
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8001"
+	}
+	err = router.Run(fmt.Sprintf(":%s", port))
+	if err != nil {
+		log.Fatal(err)
 	}
 }

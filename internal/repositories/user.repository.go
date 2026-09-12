@@ -70,7 +70,7 @@ func (r *userRepository) GetUserByUsername(username string) (*models.User, error
 
 func (r *userRepository) GetByUsernameOrEmail(usernameOrEmail string) (*models.User, error) {
 	user := &models.User{}
-	err := r.db.Where("username = ? OR email = ?", usernameOrEmail, usernameOrEmail).First(user).Error
+	err := r.db.Where("users.username = ? OR users.email = ?", usernameOrEmail, usernameOrEmail).First(user).Error
 	return user, err
 }
 

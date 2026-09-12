@@ -11,7 +11,7 @@ type Notification struct {
 	IsRead      *bool     `gorm:"default:false"`
 	Source      string    `gorm:"enum('habit', 'habit-action', 'task', 'task_step');Varchar(50)"`
 	SourceID    string    `gorm:"index"`
-	UserID      string    `gorm:"index"`
+	UserID      string    `gorm:"index;varchar(36)"`
 	User        *User     `gorm:"foreignKey:UserID"`
 }
 
