@@ -12,11 +12,11 @@ import (
 )
 
 type TaskRepository interface {
-	GetTasks(filter *models.TaskQuery, pagination *structs.PaginationAndSort) ([]*models.Task, error)
+	GetTasks(filter *models.TaskQuery, pagination *structs.PaginationAndSort) ([]models.Task, error)
 	GetTask(id string) (*models.Task, error)
 	GetTaskSummary(filter *models.TaskQuery, pagination *structs.PaginationAndSort) ([]models.TaskSummary, error)
 	CreateTask(task *models.Task) error
-	UpdateTask(task *models.Task) error
+	UpdateTask(id string, task *models.Task) error
 	DeleteTask(id string) error
 }
 
@@ -28,8 +28,8 @@ func NewTaskRepository(db *gorm.DB) TaskRepository {
 	return &taskRepository{db: db}
 }
 
-func (r *taskRepository) GetTasks(filter *models.TaskQuery, pagination *structs.PaginationAndSort) ([]*models.Task, error) {
-	tasks := []*models.Task{}
+func (r *taskRepository) GetTasks(filter *models.TaskQuery, pagination *structs.PaginationAndSort) ([]models.Task, error) {
+	tasks := []models.Task{}
 	query := r.db.Model(&models.Task{}).Where(filter.Task)
 	if filter.Search != "" {
 		query = query.Where("name LIKE ? OR description LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
@@ -132,8 +132,8 @@ func (r *taskRepository) CreateTask(task *models.Task) error {
 	return err
 }
 
-func (r *taskRepository) UpdateTask(task *models.Task) error {
-	err := r.db.Where("id = ?", task.ID).Updates(task).Error
+func (r *taskRepository) UpdateTask(id string, task *models.Task) error {
+	err := r.db.Where("id = ?", id).Updates(task).Error
 	return err
 }
 

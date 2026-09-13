@@ -1,6 +1,14 @@
 package helpers
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"habitask-backend-go/pkg/lib/structs"
+	"strconv"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
 
 type SummaryGroup struct {
 	GroupBy         string
@@ -47,4 +55,58 @@ func GetSummaryDateExpression(dateGroup string, field string) (string, error) {
 	default:
 		return "", fmt.Errorf("invalid date group: %s", dateGroup)
 	}
+}
+
+func GetPaginationAndSortFromContext(ctx *gin.Context) (paginationAndSort structs.PaginationAndSort) {
+	page, err := strconv.Atoi(ctx.Query("page"))
+	if err != nil {
+		page = 1
+	}
+	perPage, err := strconv.Atoi(ctx.Query("per_page"))
+	if err != nil {
+		perPage = 10
+	}
+	paginationAndSort.Page = page
+	paginationAndSort.PerPage = perPage
+	sortBy := ctx.Query("sort_by")
+	sortDirection := ctx.Query("sort_direction")
+	if sortBy != "" && sortDirection != "" {
+		paginationAndSort.SortBy = sortBy
+		paginationAndSort.SortDirection = sortDirection
+	}
+	if sortBy == "" && sortDirection == "" {
+		paginationAndSort.SortBy = "created_at"
+		paginationAndSort.SortDirection = "desc"
+	}
+	return paginationAndSort
+}
+
+func ProcessUserIdFromContext(ctx *gin.Context) string {
+	userId := ctx.Query("user_id")
+	if ctx.GetString("role") != "admin" {
+		userId = ctx.GetString("userId")
+	}
+	return userId
+}
+
+func ParseDate(value string) (time.Time, error) {
+	if value == "" {
+		return time.Time{}, errors.New("no date strning passed")
+	}
+	layouts := []string{
+		time.RFC3339,
+		"2006-01-02",
+	}
+
+	var err error
+
+	for _, layout := range layouts {
+		var parsed time.Time
+		parsed, err = time.Parse(layout, value)
+		if err == nil {
+			return parsed, nil
+		}
+	}
+
+	return time.Time{}, err
 }

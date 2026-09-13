@@ -1,6 +1,9 @@
 package models
 
-import "habitask-backend-go/pkg/lib/constants"
+import (
+	"habitask-backend-go/pkg/lib/constants"
+	"time"
+)
 
 type HabitAction struct {
 	BaseModel
@@ -23,9 +26,9 @@ type HabitActionSummary struct {
 
 type HabitActionQuery struct {
 	HabitAction
-	Search  string  `json:"search"`
-	DateLte *string `json:"date_lte"`
-	DateGte *string `json:"date_gte"`
+	Search  string     `json:"search"`
+	DateLte *time.Time `json:"date_lte"`
+	DateGte *time.Time `json:"date_gte"`
 	//SummaryQuerys
 	GroupBy   string `json:"group_by"`
 	DateGroup string `json:"date_group"` //day, week, month, year, week_day, month_name

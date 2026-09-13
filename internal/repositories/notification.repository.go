@@ -12,11 +12,13 @@ import (
 )
 
 type NotificationRepository interface {
-	GetNotifications(filter *models.NotificationQuery, pagination *structs.PaginationAndSort) ([]*models.Notification, error)
+	GetNotifications(filter *models.NotificationQuery, pagination *structs.PaginationAndSort) ([]models.Notification, error)
 	GetNotification(id string) (*models.Notification, error)
 	GetNotificationSummary(filter *models.NotificationQuery, pagination *structs.PaginationAndSort) ([]models.NotificationSummary, error)
+	MarkNotificationAsRead(id string) error
+	MarkAllNotificationsAsRead(userId string) error
 	CreateNotification(notification *models.Notification) error
-	UpdateNotification(notification *models.Notification) error
+	UpdateNotification(id string, notification *models.Notification) error
 	DeleteNotification(id string) error
 }
 
@@ -28,8 +30,8 @@ func NewNotificationRepository(db *gorm.DB) NotificationRepository {
 	return &notificationRepository{db: db}
 }
 
-func (r *notificationRepository) GetNotifications(filter *models.NotificationQuery, pagination *structs.PaginationAndSort) ([]*models.Notification, error) {
-	notifications := []*models.Notification{}
+func (r *notificationRepository) GetNotifications(filter *models.NotificationQuery, pagination *structs.PaginationAndSort) ([]models.Notification, error) {
+	notifications := []models.Notification{}
 	query := r.db.Model(&models.Notification{}).Where(filter.Notification)
 	if filter.Search != "" {
 		query = query.Where("title LIKE ? OR description LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
@@ -93,9 +95,18 @@ func (r *notificationRepository) CreateNotification(notification *models.Notific
 	return err
 }
 
-func (r *notificationRepository) UpdateNotification(notification *models.Notification) error {
-	err := r.db.Where("id = ?", notification.ID).Updates(notification).Error
+func (r *notificationRepository) UpdateNotification(id string, notification *models.Notification) error {
+	err := r.db.Where("id = ?", id).Updates(notification).Error
 	return err
+}
+
+func (r *notificationRepository) MarkNotificationAsRead(id string) error {
+	err := r.db.Model(&models.Notification{}).Where("id = ?", id).Update("is_read", true).Error
+	return err
+}
+
+func (r *notificationRepository) MarkAllNotificationsAsRead(userId string) error {
+	return r.db.Model(&models.Notification{}).Where("user_id = ?", userId).Update("is_read", true).Error
 }
 
 func (r *notificationRepository) DeleteNotification(id string) error {

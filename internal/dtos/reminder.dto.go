@@ -1,9 +1,8 @@
 package dtos
 
 import (
+	"errors"
 	"habitask-backend-go/internal/models"
-
-	"github.com/gin-gonic/gin"
 )
 
 type ReminderDTO struct {
@@ -55,7 +54,7 @@ type ReminderCreateDTO struct {
 	SourceFieldType     *string `json:"source_field_type"`
 }
 
-func (r *ReminderCreateDTO) ToReminder(ctx *gin.Context) *models.Reminder {
+func (r *ReminderCreateDTO) ToReminder() (*models.Reminder, error) {
 	reminder := &models.Reminder{
 		Title:               r.Title,
 		Description:         r.Description,
@@ -70,24 +69,20 @@ func (r *ReminderCreateDTO) ToReminder(ctx *gin.Context) *models.Reminder {
 	}
 	if reminder.Trigger == "source" {
 		if reminder.SourceID == nil || *reminder.SourceID == "" {
-			ctx.JSON(400, gin.H{"error": "source_id is required for source trigger"})
-			return nil
+			return nil, errors.New("source_id is required for source trigger")
 		}
 		if reminder.SourceField == nil || *reminder.SourceField == "" {
-			ctx.JSON(400, gin.H{"error": "source_field is required for source trigger"})
-			return nil
+			return nil, errors.New("source_field is required for source trigger")
 		}
 		if reminder.SourceFieldType == nil || *reminder.SourceFieldType == "" {
-			ctx.JSON(400, gin.H{"error": "source_field_type is required for source trigger"})
-			return nil
+			return nil, errors.New("source_field_type is required for source trigger")
 		}
 	} else if reminder.Trigger == "interval" {
 		if reminder.TriggerIntervalUnit == nil || *reminder.TriggerIntervalUnit == "" {
-			ctx.JSON(400, gin.H{"error": "trigger_interval_unit is required for interval trigger"})
-			return nil
+			return nil, errors.New("trigger_interval_unit is required for interval trigger")
 		}
 	}
-	return reminder
+	return reminder, nil
 }
 
 type ReminderUpdateDTO struct {

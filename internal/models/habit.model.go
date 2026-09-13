@@ -18,7 +18,7 @@ type Habit struct {
 	LastDone    *time.Time         `gorm:"datetime"`
 }
 
-type HabbitSummary struct {
+type HabitSummary struct {
 	Label         string  `json:"label"`
 	Count         int     `json:"count"`
 	PositiveCount int     `json:"positive_count"`

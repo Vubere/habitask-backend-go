@@ -1,10 +1,9 @@
 package dtos
 
 import (
+	"errors"
 	"habitask-backend-go/internal/models"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 type TaskStepDTO struct {
@@ -45,7 +44,7 @@ type TaskStepCreateDTO struct {
 	Order             *int   `json:"order"`
 }
 
-func (t *TaskStepCreateDTO) ToTaskStep(ctx *gin.Context) *models.TaskSteps {
+func (t *TaskStepCreateDTO) ToTaskStep() (*models.TaskSteps, error) {
 	taskStep := &models.TaskSteps{
 		Description:       t.Description,
 		EstimatedDuration: t.EstimatedDuration,
@@ -55,13 +54,12 @@ func (t *TaskStepCreateDTO) ToTaskStep(ctx *gin.Context) *models.TaskSteps {
 	if t.TimeDue != "" {
 		td, err := time.Parse("2006-01-02 15:04:05", t.TimeDue)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": "invalid date format"})
-			return nil
+			return nil, errors.New("invalid date format on field time_due")
 		}
 		taskStep.TimeDue = &td
 	}
 
-	return taskStep
+	return taskStep, nil
 }
 
 type TaskStepUpdateDTO struct {
@@ -73,7 +71,7 @@ type TaskStepUpdateDTO struct {
 	ActualDuration    *int    `json:"actual_duration"`
 }
 
-func (t *TaskStepUpdateDTO) ToTaskStep(ctx *gin.Context) *models.TaskSteps {
+func (t *TaskStepUpdateDTO) ToTaskStep() (*models.TaskSteps, error) {
 	taskStep := &models.TaskSteps{}
 	if t.Description != nil {
 		taskStep.Description = *t.Description
@@ -84,10 +82,7 @@ func (t *TaskStepUpdateDTO) ToTaskStep(ctx *gin.Context) *models.TaskSteps {
 	if t.TimeDue != nil {
 		timeDue, err := time.Parse("2006-01-02 15:04:05", *t.TimeDue)
 		if err != nil {
-			if ctx != nil {
-				ctx.JSON(400, gin.H{"error": "invalid date format on field time_due"})
-			}
-			return nil
+			return nil, errors.New("invalid date format on field time_due")
 		}
 		taskStep.TimeDue = &timeDue
 	}
@@ -95,26 +90,23 @@ func (t *TaskStepUpdateDTO) ToTaskStep(ctx *gin.Context) *models.TaskSteps {
 		taskStep.Order = t.Order
 	}
 
-	return taskStep
+	return taskStep, nil
 }
 
 type TaskStepCompleteDTO struct {
 	DoneAt string `json:"done_at"`
 }
 
-func (t *TaskStepCompleteDTO) ToTaskStep(ctx *gin.Context) *models.TaskSteps {
+func (t *TaskStepCompleteDTO) ToTaskStep() (*models.TaskSteps, error) {
 	taskStep := &models.TaskSteps{}
 	if t.DoneAt != "" {
 		da, err := time.Parse("2006-01-02 15:04:05", t.DoneAt)
 		if err != nil {
-			if ctx != nil {
-				ctx.JSON(400, gin.H{"error": "invalid date format on field done_at"})
-			}
-			return nil
+			return nil, errors.New("invalid date format on field done_at")
 		}
 		taskStep.DoneAt = &da
 	}
 	boolTrue := true
 	taskStep.IsDone = &boolTrue
-	return taskStep
+	return taskStep, nil
 }

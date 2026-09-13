@@ -14,6 +14,7 @@ type JwtUserInfo struct {
 	UserID   string `json:"user_id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
+	Role     string `json:"role"`
 	Exp      int64  `json:"exp"`
 }
 
@@ -22,6 +23,7 @@ func CreateToken(user JwtUserInfo) (string, error) {
 		"user_id":  user.UserID,
 		"username": user.Username,
 		"email":    user.Email,
+		"role":     user.Role,
 		"exp":      time.Now().Add(time.Hour * 24 * 7).Unix(),
 		"iat":      time.Now().Unix(),
 		"issuer":   "habitask",

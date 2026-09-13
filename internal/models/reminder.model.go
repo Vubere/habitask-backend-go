@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type Reminder struct {
 	BaseModel
 	Title               string  `gorm:"unique;varchar(100)"`
@@ -20,7 +22,7 @@ type Reminder struct {
 
 type ReminderQuery struct {
 	Reminder
-	Search  string  `json:"search"`
-	DateLte *string `json:"date_lte"`
-	DateGte *string `json:"date_gte"`
+	Search  string     `json:"search"`
+	DateLte *time.Time `json:"date_lte"`
+	DateGte *time.Time `json:"date_gte"`
 }

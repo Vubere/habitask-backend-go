@@ -9,10 +9,10 @@ import (
 )
 
 type ReminderRepository interface {
-	GetReminders(filter *models.ReminderQuery, pagination *structs.PaginationAndSort) ([]*models.Reminder, error)
+	GetReminders(filter *models.ReminderQuery, pagination *structs.PaginationAndSort) ([]models.Reminder, error)
 	GetReminder(id string) (*models.Reminder, error)
 	CreateReminder(reminder *models.Reminder) error
-	UpdateReminder(reminder *models.Reminder) error
+	UpdateReminder(id string, reminder *models.Reminder) error
 	DeleteReminder(id string) error
 }
 
@@ -24,8 +24,8 @@ func NewReminderRepository(db *gorm.DB) ReminderRepository {
 	return &reminderRepository{db: db}
 }
 
-func (r *reminderRepository) GetReminders(filter *models.ReminderQuery, pagination *structs.PaginationAndSort) ([]*models.Reminder, error) {
-	reminders := []*models.Reminder{}
+func (r *reminderRepository) GetReminders(filter *models.ReminderQuery, pagination *structs.PaginationAndSort) ([]models.Reminder, error) {
+	reminders := []models.Reminder{}
 	query := r.db.Model(&models.Reminder{}).Where(filter.Reminder)
 	if filter.Search != "" {
 		query = query.Where("title LIKE ? OR description LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
@@ -51,8 +51,8 @@ func (r *reminderRepository) CreateReminder(reminder *models.Reminder) error {
 	return err
 }
 
-func (r *reminderRepository) UpdateReminder(reminder *models.Reminder) error {
-	err := r.db.Where("id = ?", reminder.ID).Updates(reminder).Error
+func (r *reminderRepository) UpdateReminder(id string, reminder *models.Reminder) error {
+	err := r.db.Where("id = ?", id).Updates(reminder).Error
 	return err
 }
 

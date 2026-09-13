@@ -12,7 +12,7 @@ import (
 )
 
 type HabitOccurenceRepository interface {
-	GetHabitOccurences(filter *models.HabitOccurenceQuery, pagination *structs.PaginationAndSort) ([]*models.HabitOccurence, error)
+	GetHabitOccurences(filter *models.HabitOccurenceQuery, pagination *structs.PaginationAndSort) ([]models.HabitOccurence, error)
 	GetHabitOccurence(id string) (*models.HabitOccurence, error)
 	GetHabitOccurenceSummary(filter *models.HabitOccurenceQuery, pagination *structs.PaginationAndSort) ([]models.HabitOccurenceSummary, error)
 	CreateHabitOccurence(habitOccurence *models.HabitOccurence) error
@@ -28,8 +28,8 @@ func NewHabitOccurenceRepository(db *gorm.DB) HabitOccurenceRepository {
 	return &habitOccurenceRepository{db: db}
 }
 
-func (r *habitOccurenceRepository) GetHabitOccurences(filter *models.HabitOccurenceQuery, pagination *structs.PaginationAndSort) ([]*models.HabitOccurence, error) {
-	habitOccurences := []*models.HabitOccurence{}
+func (r *habitOccurenceRepository) GetHabitOccurences(filter *models.HabitOccurenceQuery, pagination *structs.PaginationAndSort) ([]models.HabitOccurence, error) {
+	habitOccurences := []models.HabitOccurence{}
 	query := r.db.Model(&models.HabitOccurence{}).Where(filter.HabitOccurence)
 	if filter.Search != "" {
 		query = query.Where("title LIKE ? OR description LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")

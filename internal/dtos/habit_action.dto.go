@@ -3,8 +3,6 @@ package dtos
 import (
 	"habitask-backend-go/internal/models"
 	"habitask-backend-go/pkg/lib/constants"
-
-	"github.com/gin-gonic/gin"
 )
 
 type HabitActionDTO struct {
@@ -42,7 +40,7 @@ type HabitActionCreateDTO struct {
 	IsPositive   *bool              `json:"is_positive"`
 }
 
-func (h *HabitActionCreateDTO) ToHabitAction(ctx *gin.Context) *models.HabitAction {
+func (h *HabitActionCreateDTO) ToHabitAction() *models.HabitAction {
 	habitAction := &models.HabitAction{
 		Title:        h.Title,
 		Description:  h.Description,

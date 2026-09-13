@@ -1,11 +1,10 @@
 package dtos
 
 import (
+	"errors"
 	"habitask-backend-go/internal/models"
 	"habitask-backend-go/pkg/lib/constants"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 type HabitDTO struct {
@@ -44,7 +43,7 @@ type HabitCreateDTO struct {
 	LastDone    *string            `json:"last_done"`
 }
 
-func (h *HabitCreateDTO) ToHabit(ctx *gin.Context) *models.Habit {
+func (h *HabitCreateDTO) ToHabit() (*models.Habit, error) {
 	habit := &models.Habit{
 		Name:        h.Name,
 		Description: h.Description,
@@ -57,14 +56,11 @@ func (h *HabitCreateDTO) ToHabit(ctx *gin.Context) *models.Habit {
 	if h.LastDone != nil {
 		ld, err := time.Parse("2006-01-02 15:04:05", *h.LastDone)
 		if err != nil {
-			if ctx != nil {
-				ctx.JSON(400, gin.H{"error": "invalid date format on field last_done"})
-			}
-			return nil
+			return nil, errors.New("invalid date format on field last_done")
 		}
 		habit.LastDone = &ld
 	}
-	return habit
+	return habit, nil
 }
 
 type HabitUpdateDTO struct {

@@ -12,11 +12,11 @@ import (
 )
 
 type HabitActionRepository interface {
-	GetHabitActions(filter *models.HabitActionQuery, pagination *structs.PaginationAndSort) ([]*models.HabitAction, error)
+	GetHabitActions(filter *models.HabitActionQuery, pagination *structs.PaginationAndSort) ([]models.HabitAction, error)
 	GetHabitAction(id string) (*models.HabitAction, error)
 	GetHabitActionSummary(filter *models.HabitActionQuery, pagination *structs.PaginationAndSort) ([]models.HabitActionSummary, error)
 	CreateHabitAction(habitAction *models.HabitAction) error
-	UpdateHabitAction(habitAction *models.HabitAction) error
+	UpdateHabitAction(id string, habitAction *models.HabitAction) error
 	DeleteHabitAction(id string) error
 }
 
@@ -28,8 +28,8 @@ func NewHabitActionRepository(db *gorm.DB) HabitActionRepository {
 	return &habitActionRepository{db: db}
 }
 
-func (r *habitActionRepository) GetHabitActions(filter *models.HabitActionQuery, pagination *structs.PaginationAndSort) ([]*models.HabitAction, error) {
-	habitActions := []*models.HabitAction{}
+func (r *habitActionRepository) GetHabitActions(filter *models.HabitActionQuery, pagination *structs.PaginationAndSort) ([]models.HabitAction, error) {
+	habitActions := []models.HabitAction{}
 	query := r.db.Model(&models.HabitAction{}).Where(filter.HabitAction)
 	if filter.Search != "" {
 		query = query.Where("title LIKE ? OR description LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
@@ -95,8 +95,8 @@ func (r *habitActionRepository) CreateHabitAction(habitAction *models.HabitActio
 	return err
 }
 
-func (r *habitActionRepository) UpdateHabitAction(habitAction *models.HabitAction) error {
-	err := r.db.Where("id = ?", habitAction.ID).Updates(habitAction).Error
+func (r *habitActionRepository) UpdateHabitAction(id string, habitAction *models.HabitAction) error {
+	err := r.db.Where("id = ?", id).Updates(habitAction).Error
 	return err
 }
 

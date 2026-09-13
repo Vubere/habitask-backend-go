@@ -12,11 +12,11 @@ import (
 )
 
 type TaskStepsRepository interface {
-	GetTaskSteps(filter *models.TaskStepsQuery, pagination *structs.PaginationAndSort) ([]*models.TaskSteps, error)
+	GetTaskSteps(filter *models.TaskStepsQuery, pagination *structs.PaginationAndSort) ([]models.TaskSteps, error)
 	GetTaskStep(id string) (*models.TaskSteps, error)
 	GetTaskStepSummary(filter *models.TaskStepsQuery, pagination *structs.PaginationAndSort) ([]models.TaskStepSummary, error)
 	CreateTaskStep(taskStep *models.TaskSteps) error
-	UpdateTaskStep(taskStep *models.TaskSteps) error
+	UpdateTaskStep(id string, taskStep *models.TaskSteps) error
 	DeleteTaskStep(id string) error
 }
 
@@ -28,8 +28,8 @@ func NewTaskStepsRepository(db *gorm.DB) TaskStepsRepository {
 	return &taskStepsRepository{db: db}
 }
 
-func (r *taskStepsRepository) GetTaskSteps(filter *models.TaskStepsQuery, pagination *structs.PaginationAndSort) ([]*models.TaskSteps, error) {
-	taskSteps := []*models.TaskSteps{}
+func (r *taskStepsRepository) GetTaskSteps(filter *models.TaskStepsQuery, pagination *structs.PaginationAndSort) ([]models.TaskSteps, error) {
+	taskSteps := []models.TaskSteps{}
 	query := r.db.Model(&models.TaskSteps{}).Where(filter.TaskSteps)
 	if filter.Search != "" {
 		query = query.Where("description LIKE ? OR time_due LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
@@ -133,7 +133,7 @@ func (r *taskStepsRepository) CreateTaskStep(taskStep *models.TaskSteps) error {
 	return err
 }
 
-func (r *taskStepsRepository) UpdateTaskStep(taskStep *models.TaskSteps) error {
+func (r *taskStepsRepository) UpdateTaskStep(id string, taskStep *models.TaskSteps) error {
 	err := r.db.Where("id = ?", taskStep.ID).Updates(taskStep).Error
 	return err
 }

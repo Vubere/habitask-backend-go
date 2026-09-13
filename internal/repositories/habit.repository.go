@@ -12,11 +12,11 @@ import (
 )
 
 type HabitRepository interface {
-	GetHabits(filter *models.HabitQuery, pagination *structs.PaginationAndSort) ([]*models.Habit, error)
+	GetHabits(filter *models.HabitQuery, pagination *structs.PaginationAndSort) ([]models.Habit, error)
 	GetHabit(id string) (*models.Habit, error)
-	GetHabitSummary(filter *models.HabitQuery, pagination *structs.PaginationAndSort) ([]models.HabbitSummary, error)
+	GetHabitSummary(filter *models.HabitQuery, pagination *structs.PaginationAndSort) ([]models.HabitSummary, error)
 	CreateHabit(habit *models.Habit) error
-	UpdateHabit(habit *models.Habit) error
+	UpdateHabit(id string, habit *models.Habit) error
 	DeleteHabit(id string) error
 }
 
@@ -28,8 +28,8 @@ func NewHabitRepository(db *gorm.DB) HabitRepository {
 	return &habitRepository{db: db}
 }
 
-func (r *habitRepository) GetHabits(filter *models.HabitQuery, pagination *structs.PaginationAndSort) ([]*models.Habit, error) {
-	habits := []*models.Habit{}
+func (r *habitRepository) GetHabits(filter *models.HabitQuery, pagination *structs.PaginationAndSort) ([]models.Habit, error) {
+	habits := []models.Habit{}
 	query := r.db.Model(&models.Habit{}).Where(filter.Habit)
 	if filter.Search != "" {
 		query = query.Where("name LIKE ? OR description LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
@@ -50,8 +50,8 @@ func (r *habitRepository) GetHabit(id string) (*models.Habit, error) {
 	return habit, err
 }
 
-func (r *habitRepository) GetHabitSummary(filter *models.HabitQuery, pagination *structs.PaginationAndSort) ([]models.HabbitSummary, error) {
-	var habits []models.HabbitSummary
+func (r *habitRepository) GetHabitSummary(filter *models.HabitQuery, pagination *structs.PaginationAndSort) ([]models.HabitSummary, error) {
+	var habits []models.HabitSummary
 	groupExpr, err := helpers.GetSummaryExpression(helpers.SummaryGroup{
 		GroupBy:         filter.GroupBy,
 		DateGroup:       filter.DateGroup,
@@ -94,8 +94,8 @@ func (r *habitRepository) CreateHabit(habit *models.Habit) error {
 	return err
 }
 
-func (r *habitRepository) UpdateHabit(habit *models.Habit) error {
-	err := r.db.Where("id = ?", habit.ID).Updates(habit).Error
+func (r *habitRepository) UpdateHabit(id string, habit *models.Habit) error {
+	err := r.db.Where("id = ?", id).Updates(habit).Error
 	return err
 }
 
