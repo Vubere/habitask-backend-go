@@ -32,6 +32,7 @@ func main() {
 	habitRepository := repositories.NewHabitRepository(db)
 	habitActionRepository := repositories.NewHabitActionRepository(db)
 	habitOccurenceRepository := repositories.NewHabitOccurenceRepository(db)
+	habitTaskRepository := repositories.NewHabitTaskRepository(db)
 
 	// Services
 	userService := services.NewUserService(userRepository)
@@ -42,6 +43,7 @@ func main() {
 	habitService := services.NewHabitService(habitRepository, userRepository)
 	habitActionService := services.NewHabitActionService(habitActionRepository, habitRepository)
 	habitOccurenceService := services.NewHabitOccurenceService(habitOccurenceRepository, habitRepository)
+	habitTaskService := services.NewHabitTaskService(habitTaskRepository)
 
 	// Controllers
 	userController := controllers.NewUserController(userService)
@@ -52,6 +54,7 @@ func main() {
 	habitController := controllers.NewHabitController(habitService)
 	habitActionController := controllers.NewHabitActionController(habitActionService)
 	habitOccurenceController := controllers.NewHabitOccurencesController(habitOccurenceService)
+	habitTaskController := controllers.NewHabitTaskController(habitTaskService)
 
 	// Routes
 	router := gin.Default()
@@ -140,6 +143,9 @@ func main() {
 		v1.POST("/reminders", reminderController.CreateReminder)
 		v1.PUT("/reminders/:reminder_id", reminderController.UpdateReminder)
 		v1.DELETE("/reminders/:reminder_id", reminderController.DeleteReminder)
+
+		// - Habit Tasks
+		v1.GET("/habit-task", habitTaskController.GetHabitTaskDisplayDetails)
 	}
 	// not found
 

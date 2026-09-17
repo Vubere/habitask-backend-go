@@ -5,6 +5,7 @@ type PaginationAndSort struct {
 	PerPage       int    `json:"per_page"`
 	SortBy        string `json:"sort_by"`
 	SortDirection string `json:"sort_direction"`
+	Count         int    `json:"count"`
 }
 
 func (p PaginationAndSort) GetOffset() int {

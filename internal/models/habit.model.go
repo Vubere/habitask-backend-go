@@ -16,6 +16,7 @@ type Habit struct {
 	Cons        string             `gorm:"text"`
 	IsPositive  *bool              `gorm:"default:true"`
 	LastDone    *time.Time         `gorm:"datetime"`
+	Streak      int                `gorm:"default:0"`
 }
 
 type HabitSummary struct {
