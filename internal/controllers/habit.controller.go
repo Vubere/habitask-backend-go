@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"habitask-backend-go/internal/dtos"
 	"habitask-backend-go/internal/models"
 	"habitask-backend-go/internal/services"
@@ -72,6 +73,8 @@ func (c *habitController) CreateHabit(ctx *gin.Context) {
 		return
 	}
 	habit, err := habitInput.ToHabit()
+	fmt.Println("userId", ctx.GetString("userId"))
+	habit.UserID = ctx.GetString("userId")
 	if err != nil {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return

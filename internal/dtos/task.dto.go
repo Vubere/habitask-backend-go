@@ -2,6 +2,7 @@ package dtos
 
 import (
 	"habitask-backend-go/internal/models"
+	"habitask-backend-go/pkg/helpers"
 	"habitask-backend-go/pkg/lib/constants"
 	"time"
 
@@ -42,10 +43,11 @@ func ParseTask(task *models.Task) *TaskDTO {
 type TaskCreateDTO struct {
 	Name              string             `json:"name" binding:"required"`
 	Category          constants.Category `json:"category" binding:"required"`
-	Description       string             `json:"description" binding:"required"`
+	Description       string             `json:"description"`
 	EstimatedDuration int                `json:"estimated_duration"`
 	DurationUnit      string             `json:"duration_unit"`
 	Priority          string             `json:"priority"`
+	DueAt             string             `json:"due_at"`
 }
 
 func (t *TaskCreateDTO) ToTask() *models.Task {
@@ -55,6 +57,13 @@ func (t *TaskCreateDTO) ToTask() *models.Task {
 		Description:       t.Description,
 		EstimatedDuration: t.EstimatedDuration,
 		Priority:          t.Priority,
+	}
+	if t.DueAt != "" {
+		da, err := helpers.ParseDate(t.DueAt)
+		if err != nil {
+			return nil
+		}
+		task.DueAt = &da
 	}
 	return task
 }
@@ -66,6 +75,7 @@ type TaskUpdateDTO struct {
 	EstimatedDuration *int                `json:"estimated_duration"`
 	ActualDuration    *int                `json:"actual_duration"`
 	Priority          *string             `json:"priority"`
+	DueAt             *string             `json:"due_at"`
 }
 
 func (t *TaskUpdateDTO) ToTask() *models.Task {
@@ -84,6 +94,16 @@ func (t *TaskUpdateDTO) ToTask() *models.Task {
 	}
 	if t.EstimatedDuration != nil {
 		task.EstimatedDuration = *t.EstimatedDuration
+	}
+	if t.ActualDuration != nil {
+		task.ActualDuration = *t.ActualDuration
+	}
+	if t.DueAt != nil {
+		da, err := helpers.ParseDate(*t.DueAt)
+		if err != nil {
+			return nil
+		}
+		task.DueAt = &da
 	}
 	return task
 }

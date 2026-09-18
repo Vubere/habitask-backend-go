@@ -20,13 +20,14 @@ type JwtUserInfo struct {
 
 func CreateToken(user JwtUserInfo) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id":  user.UserID,
-		"username": user.Username,
-		"email":    user.Email,
-		"role":     user.Role,
-		"exp":      time.Now().Add(time.Hour * 24 * 7).Unix(),
-		"iat":      time.Now().Unix(),
-		"issuer":   "habitask",
+		"user_id":   user.UserID,
+		"username":  user.Username,
+		"email":     user.Email,
+		"role":      user.Role,
+		"exp":       time.Now().Add(time.Hour * 24 * 7).Unix(),
+		"expiresIn": time.Now().Add(time.Hour * 24 * 7).Unix(),
+		"iat":       time.Now().Unix(),
+		"issuer":    "habitask",
 	})
 	tokenString, err := token.SignedString(secretKey)
 	if err != nil {
@@ -47,13 +48,31 @@ func VerifyToken(tokenString string) (JwtUserInfo, error) {
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return JwtUserInfo{}, err
+		return JwtUserInfo{}, errors.New("invalid claims")
 	}
+
+	userID, ok := claims["user_id"].(string)
+	if !ok {
+		return JwtUserInfo{}, errors.New("invalid or missing user_id claim")
+	}
+	username, ok := claims["username"].(string)
+	if !ok {
+		return JwtUserInfo{}, errors.New("invalid or missing username claim")
+	}
+	email, ok := claims["email"].(string)
+	if !ok {
+		return JwtUserInfo{}, errors.New("invalid or missing email claim")
+	}
+	expiresIn, ok := claims["expiresIn"].(float64)
+	if !ok {
+		return JwtUserInfo{}, errors.New("invalid or missing expiresIn claim")
+	}
+
 	userInfo := JwtUserInfo{
-		UserID:   claims["user_id"].(string),
-		Username: claims["username"].(string),
-		Email:    claims["email"].(string),
-		Exp:      claims["expiresIn"].(int64),
+		UserID:   userID,
+		Username: username,
+		Email:    email,
+		Exp:      int64(expiresIn),
 	}
 	return userInfo, nil
 }

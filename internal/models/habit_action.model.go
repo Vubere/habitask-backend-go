@@ -13,6 +13,7 @@ type HabitAction struct {
 	Habit        *Habit             `gorm:"foreignKey:HabitID"`
 	CostIncurred float64            `gorm:"default:0"`
 	Category     constants.Category `gorm:"varchar(255)"`
+	IsDone       *bool              `gorm:"default:false"`
 	IsPositive   *bool              `gorm:"default:true"`
 	UserID       string             `gorm:"index;type:varchar(36)"`
 	User         *User              `gorm:"foreignKey:UserID"`

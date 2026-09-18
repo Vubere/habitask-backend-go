@@ -90,7 +90,7 @@ func (r *habitRepository) GetHabitSummary(filter *models.HabitQuery, pagination 
 }
 
 func (r *habitRepository) CreateHabit(habit *models.Habit) error {
-	err := r.db.Create(habit).Error
+	err := r.db.Debug().Create(habit).Error
 	return err
 }
 

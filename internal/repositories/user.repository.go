@@ -46,7 +46,7 @@ func (r *userRepository) GetUsers(filter *models.UserQuery, pagination *structs.
 
 func (r *userRepository) GetUser(id string) (*models.User, error) {
 	user := &models.User{}
-	err := r.db.First(user, id).Error
+	err := r.db.Model(&models.User{}).Where("id = ?", id).First(user).Error
 	return user, err
 }
 

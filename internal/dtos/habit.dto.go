@@ -3,6 +3,7 @@ package dtos
 import (
 	"errors"
 	"habitask-backend-go/internal/models"
+	"habitask-backend-go/pkg/helpers"
 	"habitask-backend-go/pkg/lib/constants"
 	"time"
 )
@@ -35,10 +36,10 @@ func ParseHabit(habit *models.Habit) *HabitDTO {
 
 type HabitCreateDTO struct {
 	Name        string             `json:"name" binding:"required"`
-	Description string             `json:"description" binding:"required"`
+	Description string             `json:"description"`
 	Category    constants.Category `json:"category" binding:"required"`
-	Pros        string             `json:"pros" binding:"required"`
-	Cons        string             `json:"cons" binding:"required"`
+	Pros        string             `json:"pros"`
+	Cons        string             `json:"cons"`
 	IsPositive  *bool              `json:"is_positive"`
 	LastDone    *string            `json:"last_done"`
 }
@@ -54,7 +55,7 @@ func (h *HabitCreateDTO) ToHabit() (*models.Habit, error) {
 		LastDone:    nil,
 	}
 	if h.LastDone != nil {
-		ld, err := time.Parse("2006-01-02 15:04:05", *h.LastDone)
+		ld, err := helpers.ParseDate(*h.LastDone)
 		if err != nil {
 			return nil, errors.New("invalid date format on field last_done")
 		}

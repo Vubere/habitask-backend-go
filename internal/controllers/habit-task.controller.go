@@ -27,6 +27,7 @@ func (c *habitTaskController) GetHabitTaskDisplayDetails(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
 	}
+	query.UserID = ctx.GetString("userId")
 	habitTasks, err := c.habitTaskService.GetHabitTaskDisplayDetails(*query, pagination, ctx.Query("search"))
 	if err != nil {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})

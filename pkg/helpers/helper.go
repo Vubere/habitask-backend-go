@@ -106,6 +106,7 @@ func ParseDate(value string) (time.Time, error) {
 		if err == nil {
 			return parsed, nil
 		}
+		fmt.Println(err.Error())
 	}
 
 	return time.Time{}, err

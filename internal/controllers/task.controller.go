@@ -63,6 +63,7 @@ func (c *taskController) CreateTask(ctx *gin.Context) {
 		return
 	}
 	task := taskInput.ToTask()
+	task.UserID = ctx.GetString("userId")
 	err := c.taskService.CreateTask(task)
 	if err != nil {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})

@@ -29,8 +29,12 @@ func HabitTaskMiddleware() gin.HandlerFunc {
 			}
 			query.CreatedAtGTE = &cal
 		}
-
-		c.Set("query", query)
+		if itemType := c.Query("type"); itemType != "" {
+			query.Type = itemType
+		}
+		pagination := helpers.GetPaginationAndSortFromContext(c)
+		c.Set("pagination", &pagination)
+		c.Set("query", &query)
 		c.Next()
 	}
 }

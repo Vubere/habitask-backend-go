@@ -77,75 +77,75 @@ func main() {
 
 	public.Group("")
 	{
-		v1.POST("/users/signup", userController.SignUp)
-		v1.POST("/users/login", userController.Login)
+		public.POST("/users/signup", userController.SignUp)
+		public.POST("/users/login", userController.Login)
 	}
 
 	// - Private
 	private.Use(middleware.AuthenticationMiddleware())
 	{
 		// - Users
-		v1.GET("/users/me", userController.Me)
-		v1.GET("/users/:id", userController.GetUserById)
-		v1.GET("/users", middleware.UserMiddleware(), userController.GetUsers)
-		v1.PUT("/users/:id", userController.UpdateUser)
-		v1.DELETE("/users/:id", userController.DeleteUser)
+		private.GET("/users/me", userController.Me)
+		private.GET("/users/:id", userController.GetUserById)
+		private.GET("/users", middleware.UserMiddleware(), userController.GetUsers)
+		private.PUT("/users/:id", userController.UpdateUser)
+		private.DELETE("/users/:id", userController.DeleteUser)
 
 		// - Notifications
-		v1.GET("/notifications", notificationController.GetNotifications)
-		v1.GET("/notifications/:id", notificationController.GetNotificationById)
-		v1.GET("/notifications/summary", notificationController.GetNotificationSummary)
-		v1.PUT("/notifications/mark-as-read-/:id", notificationController.MarkNotificationAsRead)
-		v1.PUT("/notifications/mark-all-as-read", notificationController.MarkAllNotificationsAsRead)
+		private.GET("/notifications", middleware.NotificationMiddleware(), notificationController.GetNotifications)
+		private.GET("/notifications/:id", notificationController.GetNotificationById)
+		private.GET("/notifications/summary", middleware.NotificationMiddleware(), notificationController.GetNotificationSummary)
+		private.PUT("/notifications/mark-as-read-/:id", notificationController.MarkNotificationAsRead)
+		private.PUT("/notifications/mark-all-as-read", notificationController.MarkAllNotificationsAsRead)
 
 		// - Tasks
-		v1.GET("/tasks", taskController.GetTasks)
-		v1.GET("/tasks/:id", taskController.GetTaskById)
-		v1.GET("/tasks/summary", taskController.GetTaskSummary)
-		v1.POST("/tasks", taskController.CreateTask)
-		v1.PUT("/tasks/:id", taskController.UpdateTask)
-		v1.DELETE("/tasks/:id", taskController.DeleteTask)
+		private.GET("/tasks", middleware.TaskMiddleware(), taskController.GetTasks)
+		private.GET("/tasks/:id", taskController.GetTaskById)
+		private.GET("/tasks/summary", middleware.TaskMiddleware(), taskController.GetTaskSummary)
+		private.POST("/tasks", taskController.CreateTask)
+		private.PUT("/tasks/:id", taskController.UpdateTask)
+		private.DELETE("/tasks/:id", taskController.DeleteTask)
 
 		// - Task Steps
-		v1.GET("/tasks-steps", taskStepController.GetTaskSteps)
-		v1.GET("/tasks-steps/:id", taskStepController.GetTaskStepById)
-		v1.GET("/tasks-steps/summary", taskStepController.GetTaskStepSummary)
-		v1.POST("/tasks-steps", taskStepController.CreateTaskStep)
-		v1.PUT("/tasks-steps/:id", taskStepController.UpdateTaskStep)
-		v1.DELETE("/tasks-steps/:id", taskStepController.DeleteTaskStep)
+		private.GET("/tasks-steps", middleware.TaskStepMiddleware(), taskStepController.GetTaskSteps)
+		private.GET("/tasks-steps/:id", taskStepController.GetTaskStepById)
+		private.GET("/tasks-steps/summary", middleware.TaskStepMiddleware(), taskStepController.GetTaskStepSummary)
+		private.POST("/tasks-steps", taskStepController.CreateTaskStep)
+		private.PUT("/tasks-steps/:id", taskStepController.UpdateTaskStep)
+		private.DELETE("/tasks-steps/:id", taskStepController.DeleteTaskStep)
 
 		// - Habits
-		v1.GET("/habits", habitController.GetHabits)
-		v1.GET("/habits/:id", habitController.GetHabitById)
-		v1.GET("/habits/summary", habitController.GetHabitSummary)
-		v1.POST("/habits", habitController.CreateHabit)
-		v1.PUT("/habits/:id", habitController.UpdateHabit)
-		v1.DELETE("/habits/:id", habitController.DeleteHabit)
+		private.GET("/habits", middleware.HabitMiddleware(), habitController.GetHabits)
+		private.GET("/habits/:id", habitController.GetHabitById)
+		private.GET("/habits/summary", middleware.HabitMiddleware(), habitController.GetHabitSummary)
+		private.POST("/habits", habitController.CreateHabit)
+		private.PUT("/habits/:id", habitController.UpdateHabit)
+		private.DELETE("/habits/:id", habitController.DeleteHabit)
 
 		// - Habit Actions
-		v1.GET("/habits-actions", habitActionController.GetHabitActions)
-		v1.GET("/habits-actions/:id", habitActionController.GetHabitActionById)
-		v1.GET("/habits-actions/summary", habitActionController.GetHabitActionSummary)
-		v1.POST("/habits-actions", habitActionController.CreateHabitAction)
-		v1.PUT("/habits-actions/:id", habitActionController.UpdateHabitAction)
-		v1.DELETE("/habits-actions/:id", habitActionController.DeleteHabitAction)
+		private.GET("/habits-actions", middleware.HabitActionMiddleware(), habitActionController.GetHabitActions)
+		private.GET("/habits-actions/:id", habitActionController.GetHabitActionById)
+		private.GET("/habits-actions/summary", middleware.HabitActionMiddleware(), habitActionController.GetHabitActionSummary)
+		private.POST("/habits-actions", habitActionController.CreateHabitAction)
+		private.PUT("/habits-actions/:id", habitActionController.UpdateHabitAction)
+		private.DELETE("/habits-actions/:id", habitActionController.DeleteHabitAction)
 
 		// - Habit Occurences
-		v1.GET("/habits-occurences", habitOccurenceController.GetHabitOccurences)
-		v1.GET("/habits-occurences/:id", habitOccurenceController.GetHabitOccurenceById)
-		v1.GET("/habits-occurences/summary", habitOccurenceController.GetHabitOccurenceSummary)
-		v1.POST("/habits-occurences", habitOccurenceController.CreateHabitOccurence)
-		v1.PUT("/habits-occurences/:id", habitOccurenceController.UpdateHabitOccurence)
+		private.GET("/habits-occurences", middleware.HabitOccurenceMiddleware(), habitOccurenceController.GetHabitOccurences)
+		private.GET("/habits-occurences/:id", habitOccurenceController.GetHabitOccurenceById)
+		private.GET("/habits-occurences/summary", middleware.HabitOccurenceMiddleware(), habitOccurenceController.GetHabitOccurenceSummary)
+		private.POST("/habits-occurences", habitOccurenceController.CreateHabitOccurence)
+		private.PUT("/habits-occurences/:id", habitOccurenceController.UpdateHabitOccurence)
 
 		// - Reminders
-		v1.GET("/reminders", reminderController.GetReminders)
-		v1.GET("/reminders/:reminder_id", reminderController.GetReminderById)
-		v1.POST("/reminders", reminderController.CreateReminder)
-		v1.PUT("/reminders/:reminder_id", reminderController.UpdateReminder)
-		v1.DELETE("/reminders/:reminder_id", reminderController.DeleteReminder)
+		private.GET("/reminders", middleware.ReminderMiddleware(), reminderController.GetReminders)
+		private.GET("/reminders/:reminder_id", reminderController.GetReminderById)
+		private.POST("/reminders", reminderController.CreateReminder)
+		private.PUT("/reminders/:reminder_id", reminderController.UpdateReminder)
+		private.DELETE("/reminders/:reminder_id", reminderController.DeleteReminder)
 
 		// - Habit Tasks
-		v1.GET("/habit-task", habitTaskController.GetHabitTaskDisplayDetails)
+		private.GET("/habit-task", middleware.HabitTaskMiddleware(), habitTaskController.GetHabitTaskDisplayDetails)
 	}
 	// not found
 
