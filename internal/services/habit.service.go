@@ -10,8 +10,10 @@ type HabitService interface {
 	GetHabits(query models.HabitQuery, pagination *structs.PaginationAndSort) ([]models.Habit, error)
 	GetHabitSummary(query models.HabitQuery, pagination *structs.PaginationAndSort) ([]models.HabitSummary, error)
 	GetHabitById(id string) (*models.Habit, error)
+	GetHabitStats(id string) (*models.HabitStats, error)
 	CreateHabit(habit *models.Habit) error
 	UpdateHabit(id string, habit *models.Habit) error
+	SetHabitArchived(id string, archived bool) error
 	DeleteHabit(id string) error
 	ValidateEntry(habit *models.Habit) error
 }
@@ -37,6 +39,10 @@ func (s *habitService) GetHabitById(id string) (*models.Habit, error) {
 	return s.repo.GetHabit(id)
 }
 
+func (s *habitService) GetHabitStats(id string) (*models.HabitStats, error) {
+	return s.repo.GetHabitStats(id)
+}
+
 func (s *habitService) CreateHabit(habit *models.Habit) error {
 	if err := s.ValidateEntry(habit); err != nil {
 		return err
@@ -49,6 +55,10 @@ func (s *habitService) UpdateHabit(id string, habit *models.Habit) error {
 		return err
 	}
 	return s.repo.UpdateHabit(id, habit)
+}
+
+func (s *habitService) SetHabitArchived(id string, archived bool) error {
+	return s.repo.SetHabitArchived(id, archived)
 }
 
 func (s *habitService) DeleteHabit(id string) error {

@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"habitask-backend-go/internal/dtos"
 	"habitask-backend-go/internal/models"
 	"habitask-backend-go/internal/services"
@@ -15,6 +14,7 @@ type HabitController interface {
 	GetHabits(ctx *gin.Context)
 	GetHabitSummary(ctx *gin.Context)
 	GetHabitById(ctx *gin.Context)
+	GetHabitStats(ctx *gin.Context)
 	CreateHabit(ctx *gin.Context)
 	UpdateHabit(ctx *gin.Context)
 	DeleteHabit(ctx *gin.Context)
@@ -39,7 +39,7 @@ func (c *habitController) GetHabits(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
 	}
-	ctx.JSON(200, gin.H{"data": habits, "pagination": pagination, "success": true, "message": "habits retrieved successfully"})
+	ctx.JSON(200, gin.H{"data": dtos.ParseHabits(habits), "pagination": pagination, "success": true, "message": "habits retrieved successfully"})
 }
 
 func (c *habitController) GetHabitSummary(ctx *gin.Context) {
@@ -63,7 +63,17 @@ func (c *habitController) GetHabitById(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
 	}
-	ctx.JSON(200, gin.H{"data": habit, "success": true, "message": "habit retrieved successfully"})
+	ctx.JSON(200, gin.H{"data": dtos.ParseHabit(habit), "success": true, "message": "habit retrieved successfully"})
+}
+
+func (c *habitController) GetHabitStats(ctx *gin.Context) {
+	habitId := ctx.Param("id")
+	stats, err := c.habitService.GetHabitStats(habitId)
+	if err != nil {
+		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
+		return
+	}
+	ctx.JSON(200, gin.H{"data": stats, "success": true, "message": "habit stats retrieved successfully"})
 }
 
 func (c *habitController) CreateHabit(ctx *gin.Context) {
@@ -73,12 +83,11 @@ func (c *habitController) CreateHabit(ctx *gin.Context) {
 		return
 	}
 	habit, err := habitInput.ToHabit()
-	fmt.Println("userId", ctx.GetString("userId"))
-	habit.UserID = ctx.GetString("userId")
 	if err != nil {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
 	}
+	habit.UserID = ctx.GetString("userId")
 	err = c.habitService.CreateHabit(habit)
 	if err != nil {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
@@ -94,12 +103,22 @@ func (c *habitController) UpdateHabit(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
 	}
-	habitToUpdate := habitInput.ToHabit()
-	habitToUpdate.ID = habitId
-	err := c.habitService.UpdateHabit(habitId, habitToUpdate)
+	habitToUpdate, err := habitInput.ToHabit()
 	if err != nil {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
+	}
+	habitToUpdate.ID = habitId
+	err = c.habitService.UpdateHabit(habitId, habitToUpdate)
+	if err != nil {
+		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
+		return
+	}
+	if habitInput.Archived != nil {
+		if err := c.habitService.SetHabitArchived(habitId, *habitInput.Archived); err != nil {
+			ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
+			return
+		}
 	}
 	ctx.JSON(200, gin.H{"message": "habit updated successfully", "success": true})
 }
@@ -111,7 +130,7 @@ func (c *habitController) DeleteHabit(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
 	}
-	ctx.JSON(200, gin.H{"message": "habit deleted successfully", "success": true})
+	ctx.JSON(200, gin.H{"message": "habit archived successfully", "success": true})
 }
 
 func (c *habitController) getHabitPaginationAndQuery(ctx *gin.Context) (*structs.PaginationAndSort, *models.HabitQuery, error) {

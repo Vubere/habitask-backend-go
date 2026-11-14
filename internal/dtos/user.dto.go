@@ -13,6 +13,9 @@ type UserDTO struct {
 }
 
 func ParseUser(user *models.User) *UserDTO {
+	if user == nil {
+		return nil
+	}
 	return &UserDTO{
 		ID:         user.ID,
 		FirstName:  user.FirstName,

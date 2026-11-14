@@ -25,36 +25,37 @@ func main() {
 
 	// Repositories
 	userRepository := repositories.NewUserRepository(db)
-	reminderRepository := repositories.NewReminderRepository(db)
 	notificationRepository := repositories.NewNotificationRepository(db)
 	taskRepository := repositories.NewTaskRepository(db)
-	taskStepRepository := repositories.NewTaskStepsRepository(db)
 	habitRepository := repositories.NewHabitRepository(db)
-	habitActionRepository := repositories.NewHabitActionRepository(db)
-	habitOccurenceRepository := repositories.NewHabitOccurenceRepository(db)
+	habitCompletionRepository := repositories.NewHabitCompletionRepository(db)
 	habitTaskRepository := repositories.NewHabitTaskRepository(db)
+	syncRepository := repositories.NewSyncRepository(db)
+	deviceTokenRepository := repositories.NewDeviceTokenRepository(db)
 
 	// Services
 	userService := services.NewUserService(userRepository)
-	reminderService := services.NewReminderService(reminderRepository, userRepository)
 	notificationService := services.NewNotificationService(notificationRepository, userRepository)
 	taskService := services.NewTaskService(taskRepository, userRepository)
-	taskStepService := services.NewTaskStepService(taskStepRepository, userRepository, taskRepository)
 	habitService := services.NewHabitService(habitRepository, userRepository)
-	habitActionService := services.NewHabitActionService(habitActionRepository, habitRepository)
-	habitOccurenceService := services.NewHabitOccurenceService(habitOccurenceRepository, habitRepository)
+	habitCompletionService := services.NewHabitCompletionService(habitCompletionRepository, habitRepository, userRepository)
 	habitTaskService := services.NewHabitTaskService(habitTaskRepository)
+	syncService := services.NewSyncService(syncRepository)
+	deviceTokenService := services.NewDeviceTokenService(deviceTokenRepository)
+	reminderScheduler := services.NewReminderSchedulerService(db, notificationRepository, deviceTokenRepository)
 
 	// Controllers
 	userController := controllers.NewUserController(userService)
-	reminderController := controllers.NewReminderController(reminderService)
 	notificationController := controllers.NewNotificationController(notificationService)
 	taskController := controllers.NewTaskController(taskService)
-	taskStepController := controllers.NewTaskStepsController(taskStepService)
 	habitController := controllers.NewHabitController(habitService)
-	habitActionController := controllers.NewHabitActionController(habitActionService)
-	habitOccurenceController := controllers.NewHabitOccurencesController(habitOccurenceService)
+	habitCompletionController := controllers.NewHabitCompletionController(habitCompletionService)
 	habitTaskController := controllers.NewHabitTaskController(habitTaskService)
+	syncController := controllers.NewSyncController(syncService)
+	deviceTokenController := controllers.NewDeviceTokenController(deviceTokenService)
+
+	// Background reminder scheduler
+	reminderScheduler.Start()
 
 	// Routes
 	router := gin.Default()
@@ -71,8 +72,8 @@ func main() {
 	v1 := router.Group("/api/v1")
 
 	// - Public
-	// - - User
 	public := v1.Group("")
+	// - - User
 	private := v1.Group("")
 
 	public.Group("")
@@ -91,7 +92,7 @@ func main() {
 		private.PUT("/users/:id", userController.UpdateUser)
 		private.DELETE("/users/:id", userController.DeleteUser)
 
-		// - Notifications
+		// - Notification
 		private.GET("/notifications", middleware.NotificationMiddleware(), notificationController.GetNotifications)
 		private.GET("/notifications/:id", notificationController.GetNotificationById)
 		private.GET("/notifications/summary", middleware.NotificationMiddleware(), notificationController.GetNotificationSummary)
@@ -106,48 +107,34 @@ func main() {
 		private.PUT("/tasks/:id", taskController.UpdateTask)
 		private.DELETE("/tasks/:id", taskController.DeleteTask)
 
-		// - Task Steps
-		private.GET("/tasks-steps", middleware.TaskStepMiddleware(), taskStepController.GetTaskSteps)
-		private.GET("/tasks-steps/:id", taskStepController.GetTaskStepById)
-		private.GET("/tasks-steps/summary", middleware.TaskStepMiddleware(), taskStepController.GetTaskStepSummary)
-		private.POST("/tasks-steps", taskStepController.CreateTaskStep)
-		private.PUT("/tasks-steps/:id", taskStepController.UpdateTaskStep)
-		private.DELETE("/tasks-steps/:id", taskStepController.DeleteTaskStep)
-
 		// - Habits
 		private.GET("/habits", middleware.HabitMiddleware(), habitController.GetHabits)
-		private.GET("/habits/:id", habitController.GetHabitById)
 		private.GET("/habits/summary", middleware.HabitMiddleware(), habitController.GetHabitSummary)
+		private.GET("/habits/:id/stats", habitController.GetHabitStats)
+		private.GET("/habits/:id", habitController.GetHabitById)
 		private.POST("/habits", habitController.CreateHabit)
+		private.POST("/habits/:id/completions", habitCompletionController.LogCompletion)
 		private.PUT("/habits/:id", habitController.UpdateHabit)
 		private.DELETE("/habits/:id", habitController.DeleteHabit)
 
-		// - Habit Actions
-		private.GET("/habits-actions", middleware.HabitActionMiddleware(), habitActionController.GetHabitActions)
-		private.GET("/habits-actions/:id", habitActionController.GetHabitActionById)
-		private.GET("/habits-actions/summary", middleware.HabitActionMiddleware(), habitActionController.GetHabitActionSummary)
-		private.POST("/habits-actions", habitActionController.CreateHabitAction)
-		private.PUT("/habits-actions/:id", habitActionController.UpdateHabitAction)
-		private.DELETE("/habits-actions/:id", habitActionController.DeleteHabitAction)
-
-		// - Habit Occurences
-		private.GET("/habits-occurences", middleware.HabitOccurenceMiddleware(), habitOccurenceController.GetHabitOccurences)
-		private.GET("/habits-occurences/:id", habitOccurenceController.GetHabitOccurenceById)
-		private.GET("/habits-occurences/summary", middleware.HabitOccurenceMiddleware(), habitOccurenceController.GetHabitOccurenceSummary)
-		private.POST("/habits-occurences", habitOccurenceController.CreateHabitOccurence)
-		private.PUT("/habits-occurences/:id", habitOccurenceController.UpdateHabitOccurence)
-
-		// - Reminders
-		private.GET("/reminders", middleware.ReminderMiddleware(), reminderController.GetReminders)
-		private.GET("/reminders/:reminder_id", reminderController.GetReminderById)
-		private.POST("/reminders", reminderController.CreateReminder)
-		private.PUT("/reminders/:reminder_id", reminderController.UpdateReminder)
-		private.DELETE("/reminders/:reminder_id", reminderController.DeleteReminder)
+		// - Habit Completions
+		private.GET("/habit-completions", middleware.HabitCompletionMiddleware(), habitCompletionController.GetHabitCompletions)
+		private.GET("/habit-completions/summary", middleware.HabitCompletionMiddleware(), habitCompletionController.GetHabitCompletionSummary)
+		private.GET("/habit-completions/:id", habitCompletionController.GetHabitCompletionById)
+		private.POST("/habit-completions", habitCompletionController.CreateHabitCompletion)
+		private.PUT("/habit-completions/:id", habitCompletionController.UpdateHabitCompletion)
+		private.DELETE("/habit-completions/:id", habitCompletionController.DeleteHabitCompletion)
 
 		// - Habit Tasks
 		private.GET("/habit-task", middleware.HabitTaskMiddleware(), habitTaskController.GetHabitTaskDisplayDetails)
+
+		// - Sync
+		private.GET("/sync", syncController.GetChanges)
+
+		// - Devices (push tokens)
+		private.POST("/devices", deviceTokenController.Register)
+		private.DELETE("/devices/:token", deviceTokenController.Unregister)
 	}
-	// not found
 
 	port := os.Getenv("PORT")
 	if port == "" {

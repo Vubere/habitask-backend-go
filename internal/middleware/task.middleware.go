@@ -3,8 +3,6 @@ package middleware
 import (
 	"habitask-backend-go/internal/models"
 	"habitask-backend-go/pkg/helpers"
-	"habitask-backend-go/pkg/lib/constants"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,89 +11,34 @@ func TaskMiddleware() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		query := models.TaskQuery{
 			Task: models.Task{
-				Name:   ctx.GetString("name"),
 				UserID: helpers.ProcessUserIdFromContext(ctx),
 			},
 		}
-		trueVar := true
-		falseVar := false
-		if cat := ctx.Query("category"); cat != "" {
-			query.Category = constants.Category(cat)
+		if priority := ctx.Query("priority"); priority != "" {
+			query.Priority = priority
 		}
-		if pr := ctx.Query("priority"); pr != "" {
-			query.Priority = pr
+		if status := ctx.Query("status"); status != "" {
+			query.Status = models.TaskStatus(status)
 		}
-		if completed := ctx.Query("completed"); completed != "" {
-			switch completed {
-			case "true":
-				query.IsCompleted = &trueVar
-			case "false":
-				query.IsCompleted = &falseVar
-			}
+		if archived := ctx.Query("archived"); archived != "" {
+			archivedBool := archived == "true"
+			query.Archived = &archivedBool
 		}
-		if ctx.Query("completed_at_lte") != "" {
-			cal, err := helpers.ParseDate(ctx.Query("completed_at_lte"))
+		if ctx.Query("date_lte") != "" {
+			cal, err := helpers.ParseDate(ctx.Query("date_lte"))
 			if err != nil {
 				ctx.JSON(400, gin.H{"error": err.Error()})
 				return
 			}
-			query.CompletedAtLte = &cal
+			query.DateLte = &cal
 		}
-		if ctx.Query("completed_at_gte") != "" {
-			cal, err := helpers.ParseDate(ctx.Query("completed_at_gte"))
+		if ctx.Query("date_gte") != "" {
+			cal, err := helpers.ParseDate(ctx.Query("date_gte"))
 			if err != nil {
 				ctx.JSON(400, gin.H{"error": err.Error()})
 				return
 			}
-			query.CompletedAtGte = &cal
-		}
-		if ctx.Query("due_at_lte") != "" {
-			cal, err := helpers.ParseDate(ctx.Query("due_at_lte"))
-			if err != nil {
-				ctx.JSON(400, gin.H{"error": err.Error()})
-				return
-			}
-			query.DueAtLte = &cal
-		}
-		if ctx.Query("due_at_gte") != "" {
-			cal, err := helpers.ParseDate(ctx.Query("due_at_gte"))
-			if err != nil {
-				ctx.JSON(400, gin.H{"error": err.Error()})
-				return
-			}
-			query.DueAtGte = &cal
-		}
-		if edl := ctx.Query("estimated_duration_lte"); edl != "" {
-			intEdl, err := strconv.Atoi(edl)
-			if err != nil {
-				ctx.JSON(400, gin.H{"error": err.Error()})
-				return
-			}
-			query.EstimatedDurationLte = &intEdl
-		}
-		if edg := ctx.Query("estimated_duration_gte"); edg != "" {
-			intEdg, err := strconv.Atoi(edg)
-			if err != nil {
-				ctx.JSON(400, gin.H{"error": err.Error()})
-				return
-			}
-			query.EstimatedDurationGte = &intEdg
-		}
-		if adl := ctx.Query("actual_duration_lte"); adl != "" {
-			intAdl, err := strconv.Atoi(adl)
-			if err != nil {
-				ctx.JSON(400, gin.H{"error": err.Error()})
-				return
-			}
-			query.ActualDurationLte = &intAdl
-		}
-		if adg := ctx.Query("actual_duration_gte"); adg != "" {
-			intAdg, err := strconv.Atoi(adg)
-			if err != nil {
-				ctx.JSON(400, gin.H{"error": err.Error()})
-				return
-			}
-			query.ActualDurationGte = &intAdg
+			query.DateGte = &cal
 		}
 		if ctx.Query("search") != "" {
 			query.Search = ctx.Query("search")
@@ -108,7 +51,7 @@ func TaskMiddleware() func(ctx *gin.Context) {
 		}
 
 		paginationAndSort := helpers.GetPaginationAndSortFromContext(ctx)
-		ctx.Set("paginationAndSort", &paginationAndSort)
+		ctx.Set("pagination", &paginationAndSort)
 		ctx.Set("query", &query)
 		ctx.Next()
 	}

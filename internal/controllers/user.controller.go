@@ -118,7 +118,7 @@ func (c *userController) DeleteUser(ctx *gin.Context) {
 }
 
 func (c *userController) getUserPaginationAndQuery(ctx *gin.Context) (*structs.PaginationAndSort, *models.UserQuery, error) {
-	paginationAndSortPassed, exists := ctx.Get("paginationAndSort")
+	paginationAndSortPassed, exists := ctx.Get("pagination")
 	if !exists {
 		return nil, nil, errors.New("invalid pagination")
 	}

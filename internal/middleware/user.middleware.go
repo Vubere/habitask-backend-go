@@ -41,7 +41,7 @@ func UserMiddleware() func(ctx *gin.Context) {
 			query.LastName = ctx.Query("last_name")
 		}
 		paginationAndSort := helpers.GetPaginationAndSortFromContext(ctx)
-		ctx.Set("paginationAndSort", &paginationAndSort)
+		ctx.Set("pagination", &paginationAndSort)
 		ctx.Set("query", &query)
 		ctx.Next()
 	}

@@ -3,7 +3,6 @@ package middleware
 import (
 	"habitask-backend-go/internal/models"
 	"habitask-backend-go/pkg/helpers"
-	"habitask-backend-go/pkg/lib/constants"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,37 +12,30 @@ func HabitMiddleware() func(ctx *gin.Context) {
 		query := models.HabitQuery{
 			Habit: models.Habit{
 				UserID: helpers.ProcessUserIdFromContext(ctx),
-				Name:   ctx.GetString("name"),
 			},
 		}
-		trueVar := true
-		falseVar := false
-		if positive := ctx.Query("positive"); positive != "" {
-			switch positive {
-			case "true":
-				query.IsPositive = &trueVar
-			case "false":
-				query.IsPositive = &falseVar
-			}
+		if polarity := ctx.Query("polarity"); polarity != "" {
+			query.Polarity = models.Polarity(polarity)
 		}
-		if cat := ctx.Query("category"); cat != "" {
-			query.Category = constants.Category(cat)
+		if archived := ctx.Query("archived"); archived != "" {
+			archivedBool := archived == "true"
+			query.Archived = &archivedBool
 		}
-		if ctx.Query("lasd_done_lte") != "" {
-			cal, err := helpers.ParseDate(ctx.Query("last_done_lte"))
+		if ctx.Query("date_lte") != "" {
+			cal, err := helpers.ParseDate(ctx.Query("date_lte"))
 			if err != nil {
 				ctx.JSON(400, gin.H{"error": err.Error()})
 				return
 			}
-			query.LastDoneLte = &cal
+			query.DateLte = &cal
 		}
-		if ctx.Query("last_done_gte") != "" {
-			cal, err := helpers.ParseDate(ctx.Query("last_done_gte"))
+		if ctx.Query("date_gte") != "" {
+			cal, err := helpers.ParseDate(ctx.Query("date_gte"))
 			if err != nil {
 				ctx.JSON(400, gin.H{"error": err.Error()})
 				return
 			}
-			query.LastDoneGte = &cal
+			query.DateGte = &cal
 		}
 		if ctx.Query("search") != "" {
 			query.Search = ctx.Query("search")
@@ -56,7 +48,7 @@ func HabitMiddleware() func(ctx *gin.Context) {
 		}
 
 		paginationAndSort := helpers.GetPaginationAndSortFromContext(ctx)
-		ctx.Set("paginationAndSort", &paginationAndSort)
+		ctx.Set("pagination", &paginationAndSort)
 		ctx.Set("query", &query)
 		ctx.Next()
 	}

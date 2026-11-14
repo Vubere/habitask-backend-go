@@ -1,130 +1,200 @@
 package dtos
 
 import (
+	"encoding/json"
 	"habitask-backend-go/internal/models"
 	"habitask-backend-go/pkg/helpers"
-	"habitask-backend-go/pkg/lib/constants"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
+type SubtaskDTO struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	Done  bool   `json:"done"`
+}
+
 type TaskDTO struct {
-	ID                string             `json:"id"`
-	Name              string             `json:"name"`
-	Category          constants.Category `json:"category"`
-	Description       string             `json:"description"`
-	IsCompleted       *bool              `json:"is_completed"`
-	CompletedAt       string             `json:"completed_at"`
-	DueAt             string             `json:"due_at"`
-	EstimatedDuration int                `json:"estimated_duration"`
-	ActualDuration    int                `json:"actual_duration"`
-	DurationUnit      string             `json:"duration_unit"`
-	Priority          string             `json:"priority"`
-	UserID            string             `json:"user_id"`
-	User              *UserDTO           `json:"user"`
+	ID          string       `json:"id"`
+	Type        string       `json:"type"`
+	Title       string       `json:"title"`
+	Notes       string       `json:"notes"`
+	Icon        string       `json:"icon"`
+	Color       string       `json:"color"`
+	ArchivedAt  *time.Time   `json:"archived_at,omitempty"`
+	Status      string       `json:"status"`
+	DueDate     *string      `json:"due_date,omitempty"`
+	DueTime     *string      `json:"due_time,omitempty"`
+	Priority    string       `json:"priority"`
+	Subtasks    []SubtaskDTO `json:"subtasks"`
+	CompletedAt *time.Time   `json:"completed_at,omitempty"`
+	CreatedAt   time.Time    `json:"created_at"`
+	UpdatedAt   time.Time    `json:"updated_at"`
+	UserID      string       `json:"user_id"`
+	User        *UserDTO     `json:"user,omitempty"`
 }
 
 func ParseTask(task *models.Task) *TaskDTO {
-	return &TaskDTO{
-		ID:                task.ID,
-		Name:              task.Name,
-		Category:          task.Category,
-		Description:       task.Description,
-		IsCompleted:       task.IsCompleted,
-		CompletedAt:       task.CompletedAt.Format("2006-01-02 15:04:05"),
-		DueAt:             task.DueAt.Format("2006-01-02 15:04:05"),
-		EstimatedDuration: task.EstimatedDuration,
-		ActualDuration:    task.ActualDuration,
-		Priority:          task.Priority,
+	if task == nil {
+		return nil
 	}
+	dto := &TaskDTO{
+		ID:          task.ID,
+		Type:        "task",
+		Title:       task.Title,
+		Notes:       task.Notes,
+		Icon:        task.Icon,
+		Color:       task.Color,
+		ArchivedAt:  task.ArchivedAt,
+		Status:      string(task.Status),
+		DueTime:     task.DueTime,
+		Priority:    task.Priority,
+		Subtasks:    decodeSubtasks(task.Subtasks),
+		CompletedAt: task.CompletedAt,
+		CreatedAt:   task.CreatedAt,
+		UpdatedAt:   task.UpdatedAt,
+		UserID:      task.UserID,
+		User:        ParseUser(task.User),
+	}
+	if dto.Status == "" {
+		dto.Status = string(models.TaskStatusTodo)
+	}
+	if dto.Priority == "" {
+		dto.Priority = "none"
+	}
+	if task.DueDate != nil && !task.DueDate.IsZero() {
+		formatted := task.DueDate.Format("2006-01-02")
+		dto.DueDate = &formatted
+	}
+	return dto
+}
+
+func ParseTasks(tasks []models.Task) []TaskDTO {
+	result := make([]TaskDTO, 0, len(tasks))
+	for i := range tasks {
+		result = append(result, *ParseTask(&tasks[i]))
+	}
+	return result
 }
 
 type TaskCreateDTO struct {
-	Name              string             `json:"name" binding:"required"`
-	Category          constants.Category `json:"category" binding:"required"`
-	Description       string             `json:"description"`
-	EstimatedDuration int                `json:"estimated_duration"`
-	DurationUnit      string             `json:"duration_unit"`
-	Priority          string             `json:"priority"`
-	DueAt             string             `json:"due_at"`
+	Title       string       `json:"title" binding:"required"`
+	Notes       string       `json:"notes"`
+	Icon        string       `json:"icon"`
+	Color       string       `json:"color"`
+	Status      string       `json:"status"`
+	DueDate     string       `json:"due_date"`
+	DueTime     *string      `json:"due_time"`
+	Priority    string       `json:"priority"`
+	Subtasks    []SubtaskDTO `json:"subtasks"`
 }
 
-func (t *TaskCreateDTO) ToTask() *models.Task {
+func (t *TaskCreateDTO) ToTask() (*models.Task, error) {
 	task := &models.Task{
-		Name:              t.Name,
-		Category:          t.Category,
-		Description:       t.Description,
-		EstimatedDuration: t.EstimatedDuration,
-		Priority:          t.Priority,
+		Title:    t.Title,
+		Notes:    t.Notes,
+		Icon:     t.Icon,
+		Color:    t.Color,
+		Status:   models.TaskStatus(t.Status),
+		DueTime:  t.DueTime,
+		Priority: t.Priority,
 	}
-	if t.DueAt != "" {
-		da, err := helpers.ParseDate(t.DueAt)
+	if task.Status == "" {
+		task.Status = models.TaskStatusTodo
+	}
+	if task.Priority == "" {
+		task.Priority = "none"
+	}
+	if t.DueDate != "" {
+		dd, err := helpers.ParseDate(t.DueDate)
 		if err != nil {
-			return nil
+			return nil, err
 		}
-		task.DueAt = &da
+		task.DueDate = &dd
 	}
-	return task
+	task.Subtasks = encodeSubtasks(t.Subtasks)
+	return task, nil
 }
 
 type TaskUpdateDTO struct {
-	Name              *string             `json:"name"`
-	Category          *constants.Category `json:"category"`
-	Description       *string             `json:"description"`
-	EstimatedDuration *int                `json:"estimated_duration"`
-	ActualDuration    *int                `json:"actual_duration"`
-	Priority          *string             `json:"priority"`
-	DueAt             *string             `json:"due_at"`
+	Title       *string       `json:"title"`
+	Notes       *string       `json:"notes"`
+	Icon        *string       `json:"icon"`
+	Color       *string       `json:"color"`
+	Status      *string       `json:"status"`
+	DueDate     *string       `json:"due_date"`
+	DueTime     *string       `json:"due_time"`
+	Priority    *string       `json:"priority"`
+	Subtasks    *[]SubtaskDTO `json:"subtasks"`
+	Archived    *bool         `json:"archived"`
 }
 
-func (t *TaskUpdateDTO) ToTask() *models.Task {
+func (t *TaskUpdateDTO) ToTask() (*models.Task, error) {
 	task := &models.Task{}
-	if t.Name != nil {
-		task.Name = *t.Name
+	if t.Title != nil {
+		task.Title = *t.Title
 	}
-	if t.Category != nil {
-		task.Category = *t.Category
+	if t.Notes != nil {
+		task.Notes = *t.Notes
 	}
-	if t.Description != nil {
-		task.Description = *t.Description
+	if t.Icon != nil {
+		task.Icon = *t.Icon
+	}
+	if t.Color != nil {
+		task.Color = *t.Color
+	}
+	if t.Status != nil {
+		task.Status = models.TaskStatus(*t.Status)
+		if *t.Status == string(models.TaskStatusDone) {
+			now := time.Now()
+			task.CompletedAt = &now
+		}
+	}
+	if t.DueDate != nil {
+		dd, err := helpers.ParseDate(*t.DueDate)
+		if err != nil {
+			return nil, err
+		}
+		task.DueDate = &dd
+	}
+	if t.DueTime != nil {
+		task.DueTime = t.DueTime
 	}
 	if t.Priority != nil {
 		task.Priority = *t.Priority
 	}
-	if t.EstimatedDuration != nil {
-		task.EstimatedDuration = *t.EstimatedDuration
+	if t.Subtasks != nil {
+		task.Subtasks = encodeSubtasks(*t.Subtasks)
 	}
-	if t.ActualDuration != nil {
-		task.ActualDuration = *t.ActualDuration
-	}
-	if t.DueAt != nil {
-		da, err := helpers.ParseDate(*t.DueAt)
-		if err != nil {
-			return nil
+	if t.Archived != nil {
+		if *t.Archived {
+			now := time.Now()
+			task.ArchivedAt = &now
+		} else {
+			zero := time.Time{}
+			task.ArchivedAt = &zero
 		}
-		task.DueAt = &da
 	}
-	return task
+	return task, nil
 }
 
-type TaskCompleteDTO struct {
-	CompletedAt string `json:"completed_at"`
+func encodeSubtasks(subtasks []SubtaskDTO) string {
+	if subtasks == nil {
+		subtasks = []SubtaskDTO{}
+	}
+	encoded, err := json.Marshal(subtasks)
+	if err != nil {
+		return "[]"
+	}
+	return string(encoded)
 }
 
-func (t *TaskCompleteDTO) ToTask(ctx *gin.Context) *models.Task {
-	task := &models.Task{}
-	if t.CompletedAt != "" {
-		ca, err := time.Parse("2006-01-02 15:04:05", t.CompletedAt)
-		if err != nil {
-			if ctx != nil {
-				ctx.JSON(400, gin.H{"error": "invalid date format on field completed_at"})
-			}
-			return nil
-		}
-		task.CompletedAt = &ca
+func decodeSubtasks(raw string) []SubtaskDTO {
+	subtasks := []SubtaskDTO{}
+	if raw == "" {
+		return subtasks
 	}
-	boolTrue := true
-	task.IsCompleted = &boolTrue
-	return task
+	if err := json.Unmarshal([]byte(raw), &subtasks); err != nil {
+		return []SubtaskDTO{}
+	}
+	return subtasks
 }

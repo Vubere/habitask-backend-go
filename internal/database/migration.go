@@ -11,12 +11,10 @@ func Migrate(db *gorm.DB) {
 	err := db.AutoMigrate(
 		&models.User{},
 		&models.Habit{},
-		&models.HabitAction{},
-		&models.Reminder{},
+		&models.HabitCompletion{},
 		&models.Task{},
-		&models.TaskSteps{},
 		&models.Notification{},
-		&models.HabitOccurence{},
+		&models.DeviceToken{},
 	)
 	if err != nil {
 		fmt.Println("DB Migration failed: ", err)

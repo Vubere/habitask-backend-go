@@ -22,7 +22,6 @@ func AuthenticationMiddleware() func(ctx *gin.Context) {
 			ctx.AbortWithStatusJSON(401, gin.H{"error": "Unauthorized"})
 			return
 		}
-		fmt.Println("here====>", userInfo.UserID, userInfo.Username, "line")
 		ctx.Set("userId", userInfo.UserID)
 		ctx.Set("username", userInfo.Username)
 		ctx.Next()

@@ -7,12 +7,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func HabitActionMiddleware() func(ctx *gin.Context) {
+func HabitCompletionMiddleware() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
-		query := models.HabitActionQuery{
-			HabitAction: models.HabitAction{
+		query := models.HabitCompletionQuery{
+			HabitCompletion: models.HabitCompletion{
 				UserID: helpers.ProcessUserIdFromContext(ctx),
 			},
+		}
+		if habitId := ctx.Query("habit_id"); habitId != "" {
+			query.HabitID = habitId
 		}
 		if ctx.Query("date_lte") != "" {
 			cal, err := helpers.ParseDate(ctx.Query("date_lte"))
@@ -30,9 +33,6 @@ func HabitActionMiddleware() func(ctx *gin.Context) {
 			}
 			query.DateGte = &cal
 		}
-		if ctx.Query("search") != "" {
-			query.Search = ctx.Query("search")
-		}
 		if ctx.Query("group_by") != "" {
 			query.GroupBy = ctx.Query("group_by")
 		}
@@ -41,7 +41,7 @@ func HabitActionMiddleware() func(ctx *gin.Context) {
 		}
 
 		paginationAndSort := helpers.GetPaginationAndSortFromContext(ctx)
-		ctx.Set("paginationAndSort", &paginationAndSort)
+		ctx.Set("pagination", &paginationAndSort)
 		ctx.Set("query", &query)
 		ctx.Next()
 	}

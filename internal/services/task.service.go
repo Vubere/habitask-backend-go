@@ -12,6 +12,7 @@ type TaskService interface {
 	GetTaskById(id string) (*models.Task, error)
 	CreateTask(task *models.Task) error
 	UpdateTask(id string, task *models.Task) error
+	SetTaskArchived(id string, archived bool) error
 	DeleteTask(id string) error
 	ValidateEntry(task *models.Task) error
 }
@@ -49,6 +50,10 @@ func (s *taskService) UpdateTask(id string, task *models.Task) error {
 		return err
 	}
 	return s.repo.UpdateTask(id, task)
+}
+
+func (s *taskService) SetTaskArchived(id string, archived bool) error {
+	return s.repo.SetTaskArchived(id, archived)
 }
 
 func (s *taskService) DeleteTask(id string) error {

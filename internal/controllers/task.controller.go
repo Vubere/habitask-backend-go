@@ -29,7 +29,7 @@ func (c *taskController) GetTasks(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
 	}
-	ctx.JSON(200, gin.H{"data": tasks, "pagination": pagination, "success": true, "message": "tasks retrieved successfully"})
+	ctx.JSON(200, gin.H{"data": dtos.ParseTasks(tasks), "pagination": pagination, "success": true, "message": "tasks retrieved successfully"})
 }
 
 func (c *taskController) GetTaskSummary(ctx *gin.Context) {
@@ -43,7 +43,7 @@ func (c *taskController) GetTaskSummary(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
 	}
-	ctx.JSON(200, gin.H{"data": tasks, "pagination": pagination, "success": true, "message": "tasks retrieved successfully"})
+	ctx.JSON(200, gin.H{"data": tasks, "pagination": pagination, "success": true, "message": "task summaries retrieved successfully"})
 }
 
 func (c *taskController) GetTaskById(ctx *gin.Context) {
@@ -53,7 +53,7 @@ func (c *taskController) GetTaskById(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
 	}
-	ctx.JSON(200, gin.H{"data": task, "success": true, "message": "task retrieved successfully"})
+	ctx.JSON(200, gin.H{"data": dtos.ParseTask(task), "success": true, "message": "task retrieved successfully"})
 }
 
 func (c *taskController) CreateTask(ctx *gin.Context) {
@@ -62,9 +62,13 @@ func (c *taskController) CreateTask(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
 	}
-	task := taskInput.ToTask()
+	task, err := taskInput.ToTask()
+	if err != nil {
+		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
+		return
+	}
 	task.UserID = ctx.GetString("userId")
-	err := c.taskService.CreateTask(task)
+	err = c.taskService.CreateTask(task)
 	if err != nil {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
@@ -79,12 +83,22 @@ func (c *taskController) UpdateTask(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
 	}
-	taskToUpdate := taskInput.ToTask()
-	taskToUpdate.ID = taskId
-	err := c.taskService.UpdateTask(taskId, taskToUpdate)
+	taskToUpdate, err := taskInput.ToTask()
 	if err != nil {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
+	}
+	taskToUpdate.ID = taskId
+	err = c.taskService.UpdateTask(taskId, taskToUpdate)
+	if err != nil {
+		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
+		return
+	}
+	if taskInput.Archived != nil {
+		if err := c.taskService.SetTaskArchived(taskId, *taskInput.Archived); err != nil {
+			ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
+			return
+		}
 	}
 	ctx.JSON(200, gin.H{"message": "task updated successfully", "success": true})
 }
@@ -96,7 +110,7 @@ func (c *taskController) DeleteTask(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"message": err.Error(), "success": false})
 		return
 	}
-	ctx.JSON(200, gin.H{"message": "task deleted successfully", "success": true})
+	ctx.JSON(200, gin.H{"message": "task archived successfully", "success": true})
 }
 
 func (c *taskController) getTaskPaginationAndQuery(ctx *gin.Context) (*structs.PaginationAndSort, *models.TaskQuery, error) {

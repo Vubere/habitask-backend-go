@@ -7,6 +7,7 @@ import (
 	"habitask-backend-go/pkg/lib/database/scopes"
 	"habitask-backend-go/pkg/lib/structs"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -17,6 +18,7 @@ type TaskRepository interface {
 	GetTaskSummary(filter *models.TaskQuery, pagination *structs.PaginationAndSort) ([]models.TaskSummary, error)
 	CreateTask(task *models.Task) error
 	UpdateTask(id string, task *models.Task) error
+	SetTaskArchived(id string, archived bool) error
 	DeleteTask(id string) error
 }
 
@@ -31,41 +33,25 @@ func NewTaskRepository(db *gorm.DB) TaskRepository {
 func (r *taskRepository) GetTasks(filter *models.TaskQuery, pagination *structs.PaginationAndSort) ([]models.Task, error) {
 	tasks := []models.Task{}
 	query := r.db.Model(&models.Task{}).Where(filter.Task)
+	if filter.Archived == nil || !*filter.Archived {
+		query = query.Where("tasks.archived_at IS NULL")
+	}
 	if filter.Search != "" {
-		query = query.Where("name LIKE ? OR description LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
+		query = query.Where("tasks.title LIKE ? OR tasks.notes LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
 	}
-	if filter.CompletedAtLte != nil {
-		query = query.Where("completed_at <= ?", *filter.CompletedAtLte)
+	if filter.DateLte != nil {
+		query = query.Where("tasks.created_at <= ?", *filter.DateLte)
 	}
-	if filter.CompletedAtGte != nil {
-		query = query.Where("completed_at >= ?", *filter.CompletedAtGte)
+	if filter.DateGte != nil {
+		query = query.Where("tasks.created_at >= ?", *filter.DateGte)
 	}
-	if filter.DueAtLte != nil {
-		query = query.Where("due_at <= ?", *filter.DueAtLte)
-	}
-	if filter.DueAtGte != nil {
-		query = query.Where("due_at >= ?", *filter.DueAtGte)
-	}
-	if filter.EstimatedDurationLte != nil {
-		query = query.Where("estimated_duration <= ?", *filter.EstimatedDurationLte)
-	}
-	if filter.EstimatedDurationGte != nil {
-		query = query.Where("estimated_duration >= ?", *filter.EstimatedDurationGte)
-	}
-	if filter.ActualDurationLte != nil {
-		query = query.Where("actual_duration <= ?", *filter.ActualDurationLte)
-	}
-	if filter.ActualDurationGte != nil {
-		query = query.Where("actual_duration >= ?", *filter.ActualDurationGte)
-	}
-
 	err := query.Scopes(scopes.ApplyPaginationAndSort(pagination)).Find(&tasks).Error
 	return tasks, err
 }
 
 func (r *taskRepository) GetTask(id string) (*models.Task, error) {
 	task := &models.Task{}
-	err := r.db.First(task, id).Error
+	err := r.db.First(task, "id = ?", id).Error
 	return task, err
 }
 
@@ -84,9 +70,9 @@ func (r *taskRepository) GetTaskSummary(filter *models.TaskQuery, pagination *st
 		fmt.Sprintf(`
 		%s as label,
 		COUNT(tasks.id) as count,
-		SUM(tasks.is_completed) as completed_count,
-		SUM(tasks.is_completed = 0) as incomplete_count,
-		MAX(tasks.due_at) as due_count,
+		SUM(tasks.status = 'done') as completed_count,
+		SUM(tasks.status = 'todo') as incomplete_count,
+		SUM(tasks.due_date IS NOT NULL) as due_count,
 		MAX(tasks.completed_at) as last_task_date
 		`, groupExpr),
 	)
@@ -94,62 +80,37 @@ func (r *taskRepository) GetTaskSummary(filter *models.TaskQuery, pagination *st
 		query = query.Joins("JOIN users ON tasks.user_id = users.id")
 	}
 	if filter.Search != "" {
-		query = query.Where("name LIKE ? OR description LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
-	}
-	if filter.CompletedAtLte != nil {
-		query = query.Where("completed_at <= ?", *filter.CompletedAtLte)
-	}
-	if filter.CompletedAtGte != nil {
-		query = query.Where("completed_at >= ?", *filter.CompletedAtGte)
-	}
-	if filter.DueAtLte != nil {
-		query = query.Where("due_at <= ?", *filter.DueAtLte)
-	}
-	if filter.DueAtGte != nil {
-		query = query.Where("due_at >= ?", *filter.DueAtGte)
-	}
-	if filter.EstimatedDurationLte != nil {
-		query = query.Where("estimated_duration <= ?", *filter.EstimatedDurationLte)
-	}
-	if filter.EstimatedDurationGte != nil {
-		query = query.Where("estimated_duration >= ?", *filter.EstimatedDurationGte)
-	}
-	if filter.ActualDurationLte != nil {
-		query = query.Where("actual_duration <= ?", *filter.ActualDurationLte)
-	}
-	if filter.ActualDurationGte != nil {
-		query = query.Where("actual_duration >= ?", *filter.ActualDurationGte)
+		query = query.Where("tasks.title LIKE ? OR tasks.notes LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
 	}
 	err = query.Offset(pagination.GetOffset()).Limit(pagination.PerPage).Group(groupExpr).Find(&tasks).Error
-	if err != nil {
-		return nil, err
-	}
-	return nil, nil
+	return tasks, err
 }
 
 func (r *taskRepository) CreateTask(task *models.Task) error {
-	err := r.db.Create(task).Error
-	return err
+	return r.db.Create(task).Error
 }
 
 func (r *taskRepository) UpdateTask(id string, task *models.Task) error {
-	err := r.db.Where("id = ?", id).Updates(task).Error
-	return err
+	return r.db.Model(&models.Task{}).Where("id = ?", id).Updates(task).Error
+}
+
+func (r *taskRepository) SetTaskArchived(id string, archived bool) error {
+	if archived {
+		return r.db.Model(&models.Task{}).Where("id = ?", id).Update("archived_at", time.Now()).Error
+	}
+	return r.db.Model(&models.Task{}).Where("id = ?", id).Update("archived_at", nil).Error
 }
 
 func (r *taskRepository) DeleteTask(id string) error {
-	task := &models.Task{}
-	err := r.db.Where("id = ?", id).Delete(task).Error
-	return err
+	return r.SetTaskArchived(id, true)
 }
 
 var taskSummaryGroups = map[string]string{
-	"created_at":   "tasks.created_at",
-	"due_at":       "tasks.due_at",
-	"name":         "tasks.name",
-	"category":     "tasks.category",
-	"priority":     "tasks.priority",
-	"is_completed": "tasks.is_completed",
+	"created_at": "tasks.created_at",
+	"due_date":   "tasks.due_date",
+	"title":      "tasks.title",
+	"priority":   "tasks.priority",
+	"status":     "tasks.status",
 	"completed_at": "tasks.completed_at",
 	"user_id":      "tasks.user_id",
 	"username":     "users.username",

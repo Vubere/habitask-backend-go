@@ -1,7 +1,12 @@
 package repositories
 
 import (
+	"encoding/json"
+	"sort"
+	"time"
+
 	"habitask-backend-go/internal/dtos"
+	"habitask-backend-go/internal/models"
 	"habitask-backend-go/pkg/lib/structs"
 
 	"gorm.io/gorm"
@@ -24,91 +29,169 @@ func (r *habitTaskRepository) GetHabitTaskDisplayDetails(
 	pagination *structs.PaginationAndSort,
 	search string,
 ) ([]dtos.HabitTaskDTO, error) {
-	var habitTasks []dtos.HabitTaskDTO
+	rows := []dtos.HabitTaskDTO{}
+	const layout = "2006-01-02 15:04:05"
 
-	query := `
-		SELECT *
-		FROM (
-			SELECT 
-				habits.id AS id,
-				habits.name AS name,
-				habits.description AS description,
-				habits.category AS category,
-				(SELECT COUNT(*) FROM habit_actions WHERE habit_actions.habit_id = habits.id AND habit_actions.is_done = 1) AS progress,
-				(SELECT COUNT(*) FROM habit_actions WHERE habit_actions.habit_id = habits.id) AS steps,
-				habits.streak AS streak,
-				'habit' AS type,
-				habits.created_at AS created_at,
-				habits.updated_at AS updated_at
-			FROM habits
-			WHERE habits.user_id = ?
+	if filter.Type == "" || filter.Type == "habit" {
+		habits := []models.Habit{}
+		query := r.db.Model(&models.Habit{}).
+			Where("habits.user_id = ?", filter.UserID).
+			Where("habits.archived_at IS NULL")
+		if filter.CreatedAtGTE != nil && !filter.CreatedAtGTE.IsZero() {
+			query = query.Where("habits.created_at >= ?", *filter.CreatedAtGTE)
+		}
+		if filter.CreatedAtLTE != nil && !filter.CreatedAtLTE.IsZero() {
+			query = query.Where("habits.created_at <= ?", *filter.CreatedAtLTE)
+		}
+		if search != "" {
+			like := "%" + search + "%"
+			query = query.Where("habits.title LIKE ? OR habits.notes LIKE ?", like, like)
+		}
+		if err := query.Find(&habits).Error; err != nil {
+			return nil, err
+		}
 
-			UNION ALL
-
-			SELECT 
-				tasks.id AS id,
-				tasks.name AS name,
-				tasks.description AS description,
-				tasks.category AS category,
-				(SELECT COUNT(*) FROM task_steps WHERE task_steps.task_id = tasks.id AND task_steps.is_done = 1) AS progress,
-				(SELECT COUNT(*) FROM task_steps WHERE task_steps.task_id = tasks.id) AS steps,
-				NULL AS streak,
-				'task' AS type,
-				tasks.created_at AS created_at,
-				tasks.updated_at AS updated_at
-			FROM tasks
-			WHERE tasks.user_id = ?
-		) AS habit_tasks
-		WHERE 1 = 1
-	
-	`
-
-	args := []interface{}{
-		filter.UserID,
-		filter.UserID,
+		progress := r.todayProgressByHabit(habits)
+		streaks := r.streaksByHabit(habits)
+		for i := range habits {
+			h := habits[i]
+			streak := streaks[h.ID]
+			rows = append(rows, dtos.HabitTaskDTO{
+				Id:        h.ID,
+				Type:      "habit",
+				Title:     h.Title,
+				Notes:     h.Notes,
+				Icon:      h.Icon,
+				Color:     h.Color,
+				Status:    "",
+				Progress:  progress[h.ID],
+				Target:    h.TargetPerDay,
+				Streak:    &streak,
+				CreatedAt: h.CreatedAt.Format(layout),
+				UpdatedAt: h.UpdatedAt.Format(layout),
+			})
+		}
 	}
 
-	if filter.CreatedAtGTE != nil && filter.CreatedAtGTE.IsZero() == false {
-		query += ` AND habit_tasks.created_at >= ?`
-		args = append(args, filter.CreatedAtGTE)
+	if filter.Type == "" || filter.Type == "task" {
+		tasks := []models.Task{}
+		query := r.db.Model(&models.Task{}).
+			Where("tasks.user_id = ?", filter.UserID).
+			Where("tasks.archived_at IS NULL")
+		if filter.CreatedAtGTE != nil && !filter.CreatedAtGTE.IsZero() {
+			query = query.Where("tasks.created_at >= ?", *filter.CreatedAtGTE)
+		}
+		if filter.CreatedAtLTE != nil && !filter.CreatedAtLTE.IsZero() {
+			query = query.Where("tasks.created_at <= ?", *filter.CreatedAtLTE)
+		}
+		if search != "" {
+			like := "%" + search + "%"
+			query = query.Where("tasks.title LIKE ? OR tasks.notes LIKE ?", like, like)
+		}
+		if err := query.Find(&tasks).Error; err != nil {
+			return nil, err
+		}
+
+		for i := range tasks {
+			t := tasks[i]
+			progress, target := subtaskProgress(t.Subtasks)
+			rows = append(rows, dtos.HabitTaskDTO{
+				Id:        t.ID,
+				Type:      "task",
+				Title:     t.Title,
+				Notes:     t.Notes,
+				Icon:      t.Icon,
+				Color:     t.Color,
+				Status:    string(t.Status),
+				Progress:  progress,
+				Target:    target,
+				CreatedAt: t.CreatedAt.Format(layout),
+				UpdatedAt: t.UpdatedAt.Format(layout),
+			})
+		}
 	}
 
-	if filter.CreatedAtLTE != nil && filter.CreatedAtLTE.IsZero() == false {
-		query += ` AND habit_tasks.created_at <= ?`
-		args = append(args, filter.CreatedAtLTE)
+	sort.SliceStable(rows, func(i, j int) bool {
+		return rows[i].CreatedAt > rows[j].CreatedAt
+	})
+
+	start := pagination.GetOffset()
+	if start > len(rows) {
+		start = len(rows)
 	}
-	if filter.Type != "" {
-		query += ` AND habit_tasks.type = ?`
-		args = append(args, filter.Type)
+	end := start + pagination.PerPage
+	if end > len(rows) {
+		end = len(rows)
 	}
+	return rows[start:end], nil
+}
 
-	if search != "" {
-		query += `
-			AND (
-				habit_tasks.name LIKE ?
-				OR habit_tasks.description LIKE ?
-				OR habit_tasks.category LIKE ?
-			)
-		`
-
-		searchValue := "%" + search + "%"
-
-		args = append(
-			args,
-			searchValue,
-			searchValue,
-			searchValue,
-		)
+func (r *habitTaskRepository) todayProgressByHabit(habits []models.Habit) map[string]int {
+	progress := map[string]int{}
+	if len(habits) == 0 {
+		return progress
 	}
+	ids := make([]string, 0, len(habits))
+	for i := range habits {
+		ids = append(ids, habits[i].ID)
+	}
+	type aggRow struct {
+		HabitID string
+		Total   int
+	}
+	var agg []aggRow
+	r.db.Model(&models.HabitCompletion{}).
+		Select("habit_id, SUM(count) as total").
+		Where("habit_id IN ?", ids).
+		Where("date = ?", time.Now().Format("2006-01-02")).
+		Group("habit_id").
+		Scan(&agg)
+	for _, a := range agg {
+		progress[a.HabitID] = a.Total
+	}
+	return progress
+}
 
-	query += `
-		ORDER BY habit_tasks.created_at DESC
-		LIMIT ?
-		OFFSET ?
-	`
-	args = append(args, pagination.PerPage, pagination.GetOffset())
+func (r *habitTaskRepository) streaksByHabit(habits []models.Habit) map[string]int {
+	streaks := map[string]int{}
+	if len(habits) == 0 {
+		return streaks
+	}
+	ids := make([]string, 0, len(habits))
+	for i := range habits {
+		ids = append(ids, habits[i].ID)
+	}
+	completions := []models.HabitCompletion{}
+	if err := r.db.Where("habit_id IN ?", ids).Order("date asc").Find(&completions).Error; err != nil {
+		return streaks
+	}
+	byHabit := map[string][]models.HabitCompletion{}
+	for _, c := range completions {
+		byHabit[c.HabitID] = append(byHabit[c.HabitID], c)
+	}
+	for i := range habits {
+		h := habits[i]
+		stats := computeHabitStats(&h, byHabit[h.ID])
+		streaks[h.ID] = stats.CurrentStreak
+	}
+	return streaks
+}
 
-	err := r.db.Raw(query, args...).Scan(&habitTasks).Error
-
-	return habitTasks, err
+func subtaskProgress(raw string) (int, int) {
+	if raw == "" {
+		return 0, 0
+	}
+	var subtasks []struct {
+		Done bool `json:"done"`
+	}
+	if err := json.Unmarshal([]byte(raw), &subtasks); err != nil {
+		return 0, 0
+	}
+	done := 0
+	for _, s := range subtasks {
+		if s.Done {
+			done++
+		}
+	}
+	return done, len(subtasks)
 }

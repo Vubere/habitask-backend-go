@@ -44,7 +44,7 @@ func NotificationMiddleware() func(ctx *gin.Context) {
 		}
 
 		paginationAndSort := helpers.GetPaginationAndSortFromContext(ctx)
-		ctx.Set("paginationAndSort", &paginationAndSort)
+		ctx.Set("pagination", &paginationAndSort)
 		ctx.Set("query", &query)
 		ctx.Next()
 	}
